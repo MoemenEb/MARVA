@@ -1,1 +1,12 @@
-.env
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# MARVA generated outputs
+s1/outputs/
+s2/outputs/
+s3/outputs/
+
+# Aggregated results (optional – decide later)
+results/raw_outputs/
