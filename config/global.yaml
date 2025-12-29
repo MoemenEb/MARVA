@@ -1,0 +1,4 @@
+seed: 42
+log_level: INFO
+max_retries: 3
+timeout_seconds: 60

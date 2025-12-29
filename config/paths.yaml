@@ -1,0 +1,6 @@
+data_raw: data/raw
+data_processed: data/processed
+results_raw: results/raw_outputs
+results_scores: results/scores
+results_tables: results/tables
+figures_exports: figures/exports

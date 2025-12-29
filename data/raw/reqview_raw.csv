@@ -1,0 +1,88 @@
+id,requirement
+reqView-01,"User shall be able to use the application on Windows, Linux and OSX."
+reqView-02,User shall be able to use the application without installation of any additional SW except the web browser
+reqView-03,ReqView shall use REST API to download / upload a requirements document from / to Google Drive web service
+reqView-04,The data exchange via Internet shall be done via encrypted https protocol
+reqView-05,User shall be able to create a new empty document
+reqView-06,User shall be able to save the current document containing unsaved changes when creating a new document
+reqView-07,User shall be able to open a document file stored on a local user's drive
+reqView-08,User shall be able to save the current document containing unsaved changes when opening another document
+reqView-09,User shall be able to save modified document as a file stored on user's local drive
+reqView-10,User shall be able to save the current ReqView document as a template file stored on user's local drive
+reqView-11,"The template file shall contain information about document structure, definition of custom attributes and traceability definition"
+reqView-12,User shall be able to create a new document using a predefined or custom template
+reqView-13,User shall be able to encrypt saved file by a strong industry standard encryption and with a user defined password
+reqView-14,User shall be able to authorize ReqView with his Google Drive
+reqView-15,User shall be able to open a document stored on user's Google Drive by providing its name
+reqView-16,User shall be able to save the current document to user's Google Drive providing its name and password for encryption
+reqView-17,User shall be able to upload a new version of a document opened from user's Google drive
+reqView-18,User shall be able to import a structured requirements document from MS Word
+reqView-19,User shall be able to import a table from MS Excel
+reqView-20,User shall be able to export document to PDF with the same layout as displayed in the Requirements Table
+reqView-21,User shall be able to export ReqView document to HTML using a custom template
+reqView-22,User shall be able to export ReqView document to MS Word
+reqView-23,User shall be able to show and hide Table of Contents (TOC) containing overall document structure visualized as a tree
+reqView-24,User shall be able to navigate in the document by clicking at TOC sections
+reqView-25,"User shall be able to review requirements organized into a table containing at Requirement ID, Requirement Description, Discussion, Links and custom requirement attribute columns"
+reqView-26,ID column shall contain a unique identifier
+reqView-27,"Description column shall contain the section number, heading, requirement text and requirement attachments"
+reqView-28,"Discussion column shall visualize comments related to the requirement. Each comment shall contain its author, date and text"
+reqView-29,Links column shall contain list of incoming and outgoing links grouped by link type.
+reqView-30,User shall be able to change width of each column in the Requirements Table
+reqView-31,User shall be able to show / hide each Requirements Table column except ID and Description columns
+reqView-32,User shall be able to sort all columns of the Requirements Table except Discussion and Links column by ascending or descending order. Description column shall be sorted only ascending by document hierarchy order.
+reqView-33,User shall be able to display and hide Attributes Panel containing list of custom attributes of the selected requirement in the Requirements Table
+reqView-34,User shall be able to display and hide Discussion Panel containing all comments for the selected requirement in the Requirement Table.
+reqView-35,Comments in the discussion shall be sorted by date in ascending order
+reqView-36,"Each comment shall display date, author and the comment description"
+reqView-37,User shall be able to expand and collapse all comments in Discussion panel.
+reqView-38,User shall be able to display and hide Links panel containing list of all incoming and outgoing links related to the selected requirement in the Requirements Table grouped by link types
+reqView-39,User shall be able to display and hide History panel containing all changes for a selected requirement in the Requirements Table
+reqView-40,User shall be able to expand and collapse all changes in the History Panel.
+reqView-41,"User shall be able to insert a new object before, after or as a child of a selected requirement"
+reqView-42,"User shall be able to copy a selected object including its children before, after or as a child of another object"
+reqView-43,"User shall be able to move selected objects including their children before, after or as child of another object"
+reqView-44,User shall be able to mark a requirement including all its children as deleted.
+reqView-45,User shall be able to undelete a selected requirement including all its children
+reqView-46,User shall be able to permanently remove selected deleted requirements or all deleted requirements from document
+reqView-47,User shall be able to edit object heading
+reqView-48,"User shall be able to edit requirement text description using following rich text formatting: bold, italic, underline or strikethrough text; numbered list; bullet list; increase or decrease list indent; URL link"
+reqView-49,User shall be able to define custom object attributes presented as extra columns in the Requirements Table
+reqView-50,"Each custom object attribute shall have one of following types: bool, int, real, string, date, enum, xhtml"
+reqView-51,Each custom object attribute can have a text field presented to the user as column heading
+reqView-52,Each custom object attribute can be set as read only in which case user shall be prevented of changing its value for any requirement
+reqView-53,User shall be able to add a new comment for the selected object in Requirements Table.
+reqView-54,"New comments shall be stored with the current date and time, and author contact details name, email and company (see User Settings)."
+reqView-55,"User shall be able to attach to a selected requirement one or more images or documents (PDF, Word, Excel, Powerpoint, Visio, ...)."
+reqView-56,"If a requirement has an attachment it shall be shown in the Requirements Table under requirement's text. Image attachments shall be displayed as embedded pictures, for other type of attachments at least file name shall be displayed."
+reqView-57,User shall be able to open chosen attached PDF document in the browser
+reqView-58,User shall be able to download chosen attached document to the local file system
+reqView-59,User shall be able to update the attachment
+reqView-60,User shall be able to delete any chosen attachment
+reqView-61,User shall be able to create a directed link between requirements in the same document
+reqView-62,User shall be able to create a directed link between objects in two different documents
+reqView-63,User shall be able to display column summarizing all incoming and outgoing links. Each link shall be presented by ID of the linked object and short summary of its description
+reqView-64,User shall be able to delete a selected link.
+reqView-65,User shall be able to follow link in order to navigate to the linked object
+reqView-66,User shall be able to filter all requirements by the given value of any attribute
+reqView-67,User shall be able to input up to 10 filtering criterions. Each criterion can be a text keyword or name of attribute with the matched value
+reqView-68,"Criterions can be connected into logical clauses using AND, OR and NOT operators"
+reqView-69,User shall be able to filter only changed requirements from the version stored in the last opened ReqView document
+reqView-70,User shall be able to choose if he wants to present the found requirements with or without their structure (all parent section headings on all levels)
+reqView-71,User shall be able to search requirements with an attribute matching a string keyword by means of the Full Text Search (FTS).
+reqView-72,The document words shall be matched if they have the same prefix as an input keyword without respecting the case
+reqView-73,User shall get visual information if requirements changed from the original version
+reqView-74,The application shall show change indicator for requirements changed from the version stored in the opened ReqView document
+reqView-75,Each change to any of requirement attributes shall be saved into History of Changes
+reqView-76,"ReqView shall track for each change information about change date, reviewer, changed attribute name and changed attribute original value and value after the modification"
+reqView-77,User shall be able to clear the history of all requirements in the document
+reqView-78,User shall be able to print the current document
+reqView-79,User shall be able to export the printout to PDF
+reqView-80,The print layout shall have the same layout as the displayed Requirements Table including displayed columns and filtered rows
+reqView-81,ReqView Desktop shall start in less than 10s. The very first time it shall start in less than 30s.
+reqView-82,"User shall be able to work with documents up to 1000 objects, 100 file attachments and 100MB in size"
+reqView-83,Response time for common edit operations (change attributes and structure) shall be less than 1s.
+reqView-84,Opening or saving a local file shall took less than 10s.
+reqView-85,Scrolling requirements table shall be smooth with jerks shorter than 200ms
+reqView-86,The application data shall be stored in a secure storage which is not accessible by other system or web applications
+reqView-87,The application shall not send any project data to the internet (except upload of document to Google Drive by the user).

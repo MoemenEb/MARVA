@@ -1,0 +1,10 @@
+python-dotenv
+pyyaml
+pandas
+numpy
+tqdm
+matplotlib
+seaborn
+requests
+langgraph
+langchain-core
