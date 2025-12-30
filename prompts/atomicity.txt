@@ -1,0 +1,4 @@
+As an experienced business analyst,
+Analyse the following requirement for atomicity. 
+Is the requirement atomic? (y/n) and explain why?
+{requirement}
