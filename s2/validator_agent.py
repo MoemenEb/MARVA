@@ -24,10 +24,10 @@ class S2ValidatorAgent:
             "completion_single": load_prompt("completion_single"),
             "consistency_single": load_prompt("consistency_single"),
 
-            # Group-level
+            # # Group-level
             "completion_group": load_prompt("completion_group"),
             "consistency_group": load_prompt("consistency_group"),
-            "redundancy": load_prompt("redundancy"),
+            # "redundancy": load_prompt("redundancy"),
         }
 
     # --------------------------------------------------
@@ -52,10 +52,10 @@ class S2ValidatorAgent:
             "completion_single",
             "consistency_single",
         ]:
-            prompt = self.prompts[key].format(
-                requirement=requirement["text"]
+            prompt = self.prompts[key].replace(
+                "{{REQUIREMENT}}", requirement["text"]
             )
-
+            # print(f"Prompt for {key}:\n{prompt}\n")
             response = self.llm.generate(prompt)
 
             results[key] = {
@@ -86,10 +86,10 @@ class S2ValidatorAgent:
         for key in [
             "completion_group",
             "consistency_group",
-            "redundancy",
+            # "redundancy",
         ]:
-            prompt = self.prompts[key].format(
-                requirements=group_text
+            prompt = self.prompts[key].replace(
+                "{{REQUIREMENT}}", group_text
             )
 
             response = self.llm.generate(prompt)
@@ -105,28 +105,42 @@ class S2ValidatorAgent:
     # Entry point
     # --------------------------------------------------
 
-    def run(self, requirement: dict, group: list[dict] | None, scope: str) -> dict:
+    def run(self, requirement: dict | None, group: list[dict] | None, scope: str) -> dict:
         """
         Executes S2 validation under a single scope.
 
-        Parameters:
-        - scope = 'single' OR 'group'
+        scope:
+        - 'single' → per-requirement execution
+        - 'group'  → per-group execution
         """
 
         if scope == "single":
+            if requirement is None:
+                raise ValueError("Single scope requested but no requirement provided")
+
             results = self.validate_single(requirement)
 
+            return {
+                "scope": "single",
+                "req_id": requirement["req_id"],
+                "source": requirement["source"],
+                "group_id": requirement["group_id"],
+                "results": results
+            }
+
         elif scope == "group":
-            if group is None:
+            if not group:
                 raise ValueError("Group scope requested but no group context provided")
+
             results = self.validate_group(group)
+
+            return {
+                "scope": "group",
+                "group_id": group[0]["group_id"],
+                "source": group[0]["source"],
+                "requirement_ids": [r["req_id"] for r in group],
+                "results": results
+            }
 
         else:
             raise ValueError(f"Unknown S2 scope: {scope}")
-
-        return {
-            "req_id": requirement["req_id"],
-            "source": requirement["source"],
-            "group_id": requirement["group_id"],
-            "results": results
-        }

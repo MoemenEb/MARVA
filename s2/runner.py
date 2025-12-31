@@ -45,18 +45,38 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     # Execute
     # -----------------------------
-    for req in requirements:
-        out_file = out_dir / f"{req['req_id']}.json"
-        if out_file.exists():
-            continue
+    if scope == "single":
+        for req in requirements:
+            out_file = out_dir / f"{req['req_id']}.json"
+            if out_file.exists():
+                continue
 
-        group = groups.get(req["group_id"])
-        result = agent.run(req, group, scope)
+            group = groups.get(req["group_id"])
+            result = agent.run(req, group, scope)
 
-        with open(out_file, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
+            with open(out_file, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
 
-        print(f"[S2-{scope}] {req['req_id']} done")
+            print(f"[S2-single] {req['req_id']} done")
+
+
+    elif scope == "group":
+        for group_id, group_reqs in groups.items():
+            if group_id is None:
+                continue  # skip ungrouped if needed
+
+            out_file = out_dir / f"group_{group_id}.json"
+            if out_file.exists():
+                continue
+
+            # One execution per group
+            result = agent.run(None, group_reqs, scope)
+
+            with open(out_file, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
+
+            print(f"[S2-group] {group_id} done")
+
 
 
 if __name__ == "__main__":
