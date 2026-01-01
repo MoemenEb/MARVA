@@ -20,9 +20,9 @@ class S2ValidatorAgent:
         self.prompts = {
             # Single-requirement
             "atomicity": load_prompt("atomicity"),
-            # "clarity": load_prompt("clarity"),
-            # "completion_single": load_prompt("completion_single"),
-            # "consistency_single": load_prompt("consistency_single"),
+            "clarity": load_prompt("clarity"),
+            "completion_single": load_prompt("completion_single"),
+            "consistency_single": load_prompt("consistency_single"),
 
             # # Group-level
             "completion_group": load_prompt("completion_group"),
@@ -48,9 +48,9 @@ class S2ValidatorAgent:
 
         for key in [
             "atomicity",
-            # "clarity",
-            # "completion_single",
-            # "consistency_single",
+            "clarity",
+            "completion_single",
+            "consistency_single",
         ]:
             prompt = self.prompts[key].replace(
                 "{{REQUIREMENT}}", requirement["text"]

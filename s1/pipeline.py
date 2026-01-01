@@ -12,10 +12,9 @@ class S1Pipeline:
         self.prompt_template = load_prompt(prompt_name)
 
     def run(self, requirement: dict) -> dict:
-        prompt = self.prompt_template.format(
-            requirement=requirement["text"]
+        prompt = self.prompt_template.replace(
+            "{{REQUIREMENT}}", requirement["text"]
         )
-
         response = self.llm.generate(prompt)
 
         return {
