@@ -1,4 +1,5 @@
 from s3.agents.base import BaseValidationAgent
+from s3.agents.normalization import extract_json_block
 
 
 class ClarityAgent(BaseValidationAgent):
@@ -23,19 +24,13 @@ class ClarityAgent(BaseValidationAgent):
 
         response = self.llm.generate(filled_prompt)["text"]
 
-        # NOTE: For now, we assume the model responds clearly.
-        # You can later harden parsing if needed.
-        decision = "FLAG" if "FLAG" in response.upper() else "PASS"
-
-        issues = []
-        if decision == "FLAG":
-            issues.append(response.strip())
+        result = extract_json_block(response)
 
         return {
             "clarity": {
                 "agent": "clarity",
                 "mode": "single",
-                "decision": decision,
-                "issues": issues
+                "decision": result.get("decision", "FLAG"),
+                "issues": result.get("issues", []),
             }
         }

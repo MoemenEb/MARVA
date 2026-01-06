@@ -1,5 +1,6 @@
 import json
 from s3.agents.base import BaseValidationAgent
+from s3.agents.normalization import extract_json_block
 
 
 class AtomicityAgent(BaseValidationAgent):
@@ -49,7 +50,7 @@ class AtomicityAgent(BaseValidationAgent):
         # -------------------------------------------------
         # Step 3 — Normalize output
         # -------------------------------------------------
-        result = self._normalize(initial_raw)
+        result = extract_json_block(initial_raw)
 
         return {
             "atomicity": {
@@ -58,22 +59,4 @@ class AtomicityAgent(BaseValidationAgent):
                 "decision": result["decision"],
                 "issues": result.get("issues", []),
             }
-        }
-
-    def _normalize(self, raw: str) -> dict:
-        """
-        Parse and normalize LLM output into canonical MARVA format.
-        """
-        try:
-            parsed = json.loads(raw)
-        except Exception:
-            # Hard-gate safety fallback
-            return {
-                "decision": "FLAG",
-                "issues": []
-            }
-
-        return {
-            "decision": parsed.get("decision", "FLAG"),
-            "issues": parsed.get("issues", []),
         }
