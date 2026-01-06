@@ -5,6 +5,7 @@ from s3.agents.atomicity_agent import AtomicityAgent
 from s3.agents.clarity_agent import ClarityAgent
 from s3.agents.completion_agent import CompletionAgent
 from s3.agents.consistency_agent import ConsistencyAgent
+from s3.agents.decision_agent import DecisionAgent
 from s3.agents.redundancy_agent import RedundancyAgent
 from s3.agents.stubs import StubAgent, DecisionStubAgent
 
@@ -40,6 +41,9 @@ def build_stub_agents():
 
     redundancy_prompt = open("./prompts/redundancy.txt").read()
 
+    vda_prompt = open("./prompts/recommend.txt").read()
+
+
     return {
         # REAL agent
         "atomicity": AtomicityAgent(llm=llm, prompts=atomicity_prompts),
@@ -49,7 +53,6 @@ def build_stub_agents():
         "consistency_single": ConsistencyAgent(llm=llm, prompts=consistency_prompts),
         "consistency_group": ConsistencyAgent(llm=llm, prompts=consistency_prompts),
         "redundancy": RedundancyAgent(llm=llm, prompt=redundancy_prompt),
-        # STUB agents (unchanged)
-        
-        "decision": DecisionStubAgent(),
+        "decision": DecisionAgent(llm=llm, prompt=vda_prompt),
+
     }

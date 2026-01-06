@@ -1,38 +1,117 @@
-class ValidationDecisionAgent:
+from s3.agents.base import BaseValidationAgent
+from s3.agents.normalization import extract_json_block
+
+
+class DecisionAgent(BaseValidationAgent):
     """
-    Final decision authority in MARVA S3.
+    Validation Decision Agent (VDA) — S3
 
-    This agent:
-    - Receives outputs from all validation agents
-    - Reasons over agreement / conflict
-    - Produces the final validation decision
+    Internal phases:
+    1. Collect & aggregate agent results
+    2. Compute final decision (deterministic)
+    3. Generate advisory recommendations (LLM)
     """
 
-    def __init__(self, llm):
-        self.llm = llm
-        self.role = "ValidationDecisionAgent"
+    def __init__(self, llm, prompt: str):
+        super().__init__(llm)
+        self.prompt = prompt
 
-    def run(self, agent_outputs: list[dict]) -> dict:
-        summary = "\n".join(
-            f"- {o['dimension']}: {o['judgment']}"
-            for o in agent_outputs
-        )
+    # -------------------------------------------------
+    # Entry point
+    # -------------------------------------------------
+    def run(self, state: dict) -> dict:
+        mode = state["mode"]
 
-        prompt = f"""
-        You are the final validation authority.
-
-        Given the following validation judgments:
-        {summary}
-
-        Identify:
-        - Major issues
-        - Conflicts between agents
-        - Overall validation status
-        """
-
-        decision = self.llm.generate(prompt)["text"]
+        aggregated = self._collect_results(state, mode)
+        final_decision = self._final_decision(aggregated)
+        recommendations = self._recommendations(state, aggregated, mode)
 
         return {
-            "agent": self.role,
-            "final_decision": decision
+            "decision": {
+                "agent": "validation decision agent",
+                "mode": mode,
+                "final_decision": final_decision,
+                "by_agent": aggregated,
+                "recommendations": recommendations,
+            }
         }
+
+    # -------------------------------------------------
+    # Task 1 — Collect & aggregate
+    # -------------------------------------------------
+    def _collect_results(self, state: dict, mode: str) -> dict:
+        results = {}
+
+        if mode == "single":
+            if "atomicity" in state:
+                results["atomicity"] = state["atomicity"]["decision"]
+
+            for key in ["clarity", "completion_single", "consistency_single"]:
+                if key in state:
+                    name = key.replace("_single", "")
+                    results[name] = state[key]["decision"]
+
+        elif mode == "group":
+            for key in ["redundancy", "completion_group", "consistency_group"]:
+                if key in state:
+                    name = key.replace("_group", "")
+                    results[name] = state[key]["decision"]
+
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
+
+        return results
+
+    # -------------------------------------------------
+    # Task 2 — Final decision
+    # -------------------------------------------------
+    def _final_decision(self, aggregated: dict) -> str:
+        if aggregated.get("atomicity") == "FAIL":
+                return "FAIL"
+
+        if any(decision == "FLAG" for decision in aggregated.values()):
+            return "FLAG"
+
+        return "PASS"
+
+    # -------------------------------------------------
+    # Task 3 — Recommendations (LLM-based)
+    # -------------------------------------------------
+    def _recommendations(self, state: dict, aggregated: dict, mode: str) -> list[str]:
+        issues = self._collect_issues(state)
+        if not issues:
+            return []
+
+        requirements_text = self._format_requirements(state, mode)
+
+        prompt = (
+            self.prompt
+            .replace("{{MODE}}", mode)
+            .replace("{{REQUIREMENTS}}", requirements_text)
+            .replace("{{ISSUES}}", issues)
+        )
+
+        raw = self.llm.generate(prompt)["text"]
+        parsed = extract_json_block(raw)
+
+        return parsed.get("recommendations", [])
+
+    # -------------------------------------------------
+    # Helpers
+    # -------------------------------------------------
+    def _collect_issues(self, state: dict) -> str:
+        lines = []
+
+        for key, value in state.items():
+            if isinstance(value, dict) and value.get("issues"):
+                lines.append(f"{key}: {value['issues']}")
+
+        return "\n".join(lines)
+
+    def _format_requirements(self, state: dict, mode: str) -> str:
+        if mode == "single":
+            return state["requirement"]["text"]
+
+        return "\n".join(
+            f"- {req['text']}" for req in state["group"]
+        )

@@ -80,7 +80,7 @@ def build_marva_s3_graph(agents: dict):
     graph.add_node("join_group", join_node)
 
     # Decision agent
-    graph.add_node("decision", agents["decision"])
+    graph.add_node("decision", lambda s: agents["decision"].run(s))
 
     # -------------------------------------------------
     # Entry point
