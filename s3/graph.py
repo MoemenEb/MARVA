@@ -15,7 +15,11 @@ def orchestrator_agent(state: MARVAState):
     - Can later be extended with reasoning / LLM logic
     - Does NOT write validation results
     """
-    return None
+    return {
+        "mode": state["mode"],
+        "requirement": state.get("requirement"),
+        "group": state.get("group"),
+    }
 
 
 def single_parallel_node(state: MARVAState):
@@ -59,8 +63,8 @@ def build_marva_s3_graph(agents: dict):
     graph.add_node("orchestrator", orchestrator_agent)
 
     # Single-scope validation agents
-    graph.add_node("atomicity", agents["atomicity"])
-    graph.add_node("clarity", agents["clarity"])
+    graph.add_node("atomicity", lambda s: agents["atomicity"].run(s))
+    graph.add_node("clarity", lambda s: agents["clarity"].run(s))
     graph.add_node("completion_single", agents["completion_single"])
     graph.add_node("consistency_single", agents["consistency_single"])
 
@@ -109,7 +113,7 @@ def build_marva_s3_graph(agents: dict):
     # -------------------------------------------------
 
     def atomicity_router(state: MARVAState):
-        if state["atomicity"]["status"] == "fail":
+        if state["atomicity"]["decision"] == "fail":
             return "decision"
         return "single_parallel"
 

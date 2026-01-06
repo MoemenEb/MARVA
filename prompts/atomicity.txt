@@ -7,7 +7,6 @@ If an issue belongs to another validation dimension, ignore it completely.
 Do not assume relationships beyond what is explicitly stated in the input.
 USE ONLY THE OUTPUT SCHEMA AS YOUR OUTPUT RESPONSE. DO NOT ADD EXTRA WORDS.
 If the final decision is PASS, issues list must be an empty list.
-If verification PASS, then verification reason is empty.
 
 Requirement under evaluation:
  "{{REQUIREMENT}}"
@@ -33,27 +32,12 @@ issue types: [MULTIPLE_ACTIONS - MULTIPLE_OUTCOMES - CONJUNCTION_INTENT - EMBEDD
 Enumerations describing the internal composition or contents of a single artifact are treated as a single atomic intent if they do not imply separate actions.
 INVALID_INPUT shall be used exclusively for inputs that are not linguistically valid or not interpretable as requirements. Semantic, architectural, or domain-level concerns MUST NOT be classified as invalid input.
 
-After the validation is done, perform a verification step - without streaming the response -.
-Do not re-evaluate the requirement, reinterpret the text, alter the decision, add or remove issues, or introduce new uncertainty.
-If any verification rule is violated, set verification to FAIL and explain.
-
-Verification steps start:
-All atomicity criteria were evaluated.
-Decision rules were applied exactly.
-Borderline handling rules were respected.
-Reasoning remained within atomicity scope.
-Every reported issue is supported by explicit textual evidence.
-The output strictly follows the required schema.
-
-
 This how to generate a response:
 Output Schema (JSON Only):
 {
   "agent": "Atomicity Validation Agent",
   "mode": "single",
   "decision": "PASS | FAIL | FLAG",
-  "verification": "PASS | FAIL",
-  "verification reason" : "<one sentence>",
   "issues": [
     {
       "issue_type": "<string>",
@@ -65,7 +49,3 @@ Output Schema (JSON Only):
   ]
 }
 
-
-Output Rules:
-verification = FAIL indicates a reasoning integrity failure, not a semantic validation failure.
-verification = FAIL does not alter the decision

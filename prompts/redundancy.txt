@@ -9,9 +9,6 @@ Read the next and save it to your memory.
 Output Rules
 USE ONLY THE OUTPUT SCHEMA AS YOUR OUTPUT RESPONSE. DO NOT ADD EXTRA WORDS.
  If the final decision is PASS, issues list must be an empty list.
- If verification PASS, then verification reason is empty.
- verification = FAIL indicates a reasoning integrity failure, not a semantic validation failure.
- verification = FAIL does not alter the decision.
 
 Requirements under evaluation
 "{{REQUIREMENT}}"
@@ -63,33 +60,11 @@ Correspond to a detected redundancy set
 Be factual and declarative
 Be supported by explicit textual evidence or requirement references
 
-
-Verification Step (Post-Validation)
-After the validation is completed, perform a verification step without streaming the response.
-Do not:
-Re-evaluate the requirements
-Reinterpret the text
-Alter the decision
-Add or remove issues
-Introduce new uncertainty
-
-If any verification rule is violated, set verification to FAIL and explain.
-Verification checks
-All redundancy criteria were evaluated
-Decision rules were applied exactly
-Borderline handling rules were respected
-Reasoning remained strictly within redundancy scope
-Every reported issue is supported by explicit textual evidence or references
-The output strictly follows the required schema
-
-
 Output Schema (JSON Only)
 {
   "agent": "Redundancy Validation Agent",
   "mode": "group",
   "decision": "PASS | FLAG",
-  "verification": "PASS | FAIL",
-  "verification reason": "<one sentence>",
   "issues": [
     {
       "issue_type": "FULL_REDUNDANCY | PARTIAL_REDUNDANCY",

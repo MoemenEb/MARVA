@@ -39,18 +39,6 @@ Decision Principles (Non-Negotiable)
 Hard Gate Rule
 If Atomicity (single) decision = FAIL, then Final status = FAIL
 
-
-Verification Integrity Rule
-If any agent has verification = FAIL:
-Surface it explicitly
-Do not suppress or reinterpret it
-Severity Awareness Rule
-Severity values (LOW / MEDIUM / HIGH) are used to:
-Prioritize concerns
-Explain the dominance of failures or flags
-Severity does not change agent decisions
-
-
 No Re-Validation Rule
 Do not reassess correctness
 Do not reinterpret evidence

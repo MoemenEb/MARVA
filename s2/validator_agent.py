@@ -28,6 +28,9 @@ class S2ValidatorAgent:
             "completion_group": load_prompt("completion_group"),
             "consistency_group": load_prompt("consistency_group"),
             "redundancy": load_prompt("redundancy"),
+
+            # Summary-level
+            "summary": load_prompt("s2_vdp"),
         }
 
     # --------------------------------------------------
@@ -102,6 +105,29 @@ class S2ValidatorAgent:
         return results
 
     # --------------------------------------------------
+    # Validation summary scope
+    # --------------------------------------------------
+    def summarize_validation(self, validation_results: dict) -> dict:
+        """
+        Summarizes validation results across scopes.
+
+        This method can be expanded to provide
+        aggregated insights if needed.
+        """
+        prompt = self.prompts["summary"].replace(
+            "{{VALIDATION_RESULTS}}", str(validation_results)
+        )
+        response = self.llm.generate(prompt)
+
+        validation_summary = {
+            "output": response["text"],
+            "latency_ms": response["latency_ms"],
+        }
+
+        # Placeholder for future summary logic
+        return validation_summary
+
+    # --------------------------------------------------
     # Entry point
     # --------------------------------------------------
 
@@ -119,13 +145,15 @@ class S2ValidatorAgent:
                 raise ValueError("Single scope requested but no requirement provided")
 
             results = self.validate_single(requirement)
+            summary = self.summarize_validation(results)
 
             return {
                 "scope": "single",
                 "req_id": requirement["req_id"],
                 "source": requirement["source"],
                 "group_id": requirement["group_id"],
-                "results": results
+                "results": results,
+                "summary": summary
             }
 
         elif scope == "group":
@@ -133,13 +161,15 @@ class S2ValidatorAgent:
                 raise ValueError("Group scope requested but no group context provided")
 
             results = self.validate_group(group)
+            summary = self.summarize_validation(results)
 
             return {
                 "scope": "group",
                 "group_id": group[0]["group_id"],
                 "source": group[0]["source"],
                 "requirement_ids": [r["req_id"] for r in group],
-                "results": results
+                "results": results,
+                "summary": summary
             }
 
         else:

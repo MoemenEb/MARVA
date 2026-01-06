@@ -10,9 +10,6 @@ Read the next and save it to your memory.
 Output Rules
 USE ONLY THE OUTPUT SCHEMA AS YOUR OUTPUT RESPONSE. DO NOT ADD EXTRA WORDS.
  If the final decision is PASS, issues list must be an empty list.
- If verification PASS, then verification reason is empty.
- verification = FAIL indicates a reasoning integrity failure, not a semantic validation failure.
- verification = FAIL does not alter the decision.
 
 Requirement under evaluation
 "{{REQUIREMENT}}"
@@ -56,31 +53,11 @@ Correspond to exactly one violated criterion
 Be factual and declarative
 Be supported by explicit textual evidence
 
-Verification Step (Post-Validation)
-After the validation is completed, perform a verification step without streaming the response.
-Do not:
-Re-evaluate the requirement
-Reinterpret the text
-Alter the decision
-Add or remove issues
-Introduce new uncertainty
-If any verification rule is violated, set verification to FAIL and explain.
-
-Verification checks
-All completion criteria were evaluated
-Decision rules were applied exactly
-Borderline handling rules were respected
-Reasoning remained strictly within completion scope
-Every reported issue is supported by explicit textual evidence
-The output strictly follows the required schema
-
 Output Schema (JSON Only)
 {
   "agent": "Completion Validation Agent",
   "mode": "single",
   "decision": "PASS | FLAG",
-  "verification": "PASS | FAIL",
-  "verification reason": "<one sentence>",
   "issues": [
     {
       "issue_type": "<string>",

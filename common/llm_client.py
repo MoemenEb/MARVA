@@ -2,16 +2,18 @@ import requests
 import time
 
 class LLMClient:
-    def __init__(self, host: str, model: str, timeout: int = 60):
+    def __init__(self, host: str, model: str, timeout: int = 60, temperature: float = 0.0):
         self.host = host.rstrip("/")
         self.model = model
         self.timeout = timeout
-
+        self.temperature = temperature
+        
     def generate(self, prompt: str) -> dict:
         url = f"{self.host}/api/generate"
         payload = {
             "model": self.model,
             "prompt": prompt,
+            "temperature": self.temperature,
             "stream": False
         }
 

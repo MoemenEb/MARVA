@@ -1,29 +1,51 @@
-from typing import TypedDict, Dict, Any
+from typing import TypedDict, Dict, Any, List
 from typing_extensions import Annotated
-import operator
+
+
+def replace(_, new):
+    return new
+
+
+class Requirement(TypedDict):
+    req_id: str
+    text: str
+    source: str
+    group_id: str
+    metadata: Dict[str, Any]
 
 
 class MARVAState(TypedDict, total=False):
     """
     Explicit LangGraph state for MARVA S3.
-
-    Each agent owns exactly one key.
-    All keys are mergeable.
     """
 
-    # routing context (read-only)
+    # ----------------------------
+    # Routing context
+    # ----------------------------
     mode: str
 
-    # single-scope agents
-    atomicity: Dict[str, Any]
-    clarity: Dict[str, Any]
-    completion_single: Dict[str, Any]
-    consistency_single: Dict[str, Any]
+    # ----------------------------
+    # INPUT CHANNELS (IMMUTABLE)
+    # ----------------------------
+    requirement: Annotated[Requirement, replace]
+    group: Annotated[List[Requirement], replace]
 
-    # group-scope agents
-    redundancy: Dict[str, Any]
-    completion_group: Dict[str, Any]
-    consistency_group: Dict[str, Any]
+    # ----------------------------
+    # Single-scope agent outputs
+    # ----------------------------
+    atomicity: Annotated[Dict[str, Any], replace]
+    clarity: Annotated[Dict[str, Any], replace]
+    completion_single: Annotated[Dict[str, Any], replace]
+    consistency_single: Annotated[Dict[str, Any], replace]
 
-    # final decision
-    decision: Dict[str, Any]
+    # ----------------------------
+    # Group-scope agent outputs
+    # ----------------------------
+    redundancy: Annotated[Dict[str, Any], replace]
+    completion_group: Annotated[Dict[str, Any], replace]
+    consistency_group: Annotated[Dict[str, Any], replace]
+
+    # ----------------------------
+    # Final decision
+    # ----------------------------
+    decision: Annotated[Dict[str, Any], replace]
