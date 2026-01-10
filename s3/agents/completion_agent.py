@@ -37,6 +37,7 @@ class CompletionAgent(BaseValidationAgent):
         )
 
         raw = self.llm.generate(prompt)["text"]
+        print("Single Complete agent Output:", raw)
         result = extract_json_block(raw)
 
         return {
@@ -63,6 +64,7 @@ class CompletionAgent(BaseValidationAgent):
         )
 
         raw = self.llm.generate(prompt)["text"]
+        print("Group Complete agent Output:", raw)
         result = extract_json_block(raw)
 
         return {
