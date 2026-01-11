@@ -16,10 +16,17 @@ def build_stub_agents():
     # -------------------------------------------------
     llm = LLMClient(
         host="http://localhost:11434",
-        model="qwen3:1.7b",
+        model="llama3.2",
         temperature=0.0,
         )
-
+    #gemma3n:e2b
+    #gemma3:4b
+    #deepseek-r1:1.5b
+    #qwen3:1.7b
+    #qwen3:4b (heavy)
+    #llama3.2 (flaky)
+    #falcon3:3b
+    #ministral-3:3b
     # -------------------------------------------------
     # Load prompts
     # -------------------------------------------------

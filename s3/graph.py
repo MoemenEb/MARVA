@@ -113,7 +113,7 @@ def build_marva_s3_graph(agents: dict):
     # -------------------------------------------------
 
     def atomicity_router(state: MARVAState):
-        if state["atomicity"]["decision"] == "fail":
+        if state["atomicity"]["decision"].upper() == "FAIL":
             return "decision"
         return "single_parallel"
 

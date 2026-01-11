@@ -46,10 +46,11 @@ class DecisionAgent(BaseValidationAgent):
             if "atomicity" in state:
                 results["atomicity"] = state["atomicity"]["decision"]
 
-            for key in ["clarity", "completion_single", "consistency_single"]:
-                if key in state:
-                    name = key.replace("_single", "")
-                    results[name] = state[key]["decision"]
+            if state.get("atomicity", {}).get("decision") != "FAIL":
+                for key in ["clarity", "completion_single", "consistency_single"]:
+                    if key in state:
+                        name = key.replace("_single", "")
+                        results[name] = state[key]["decision"]
 
         elif mode == "group":
             for key in ["redundancy", "completion_group", "consistency_group"]:
