@@ -10,6 +10,7 @@ from s3.graph import build_marva_s3_graph
 from s3.agents import build_stub_agents
 
 DATA_PATH = Path("data/processed/requirements_grouped.json")
+DECISON_OUTPUT_PATH = Path("out/s3_decisions/")
 
 
 def main(mode: str, scope: str, limit: int | None):
@@ -48,12 +49,19 @@ def main(mode: str, scope: str, limit: int | None):
     out_dir = Path(f"s3/outputs/{mode}/{scope}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{mode}_{scope}")
+    decision_out_dir.mkdir(parents=True, exist_ok=True)
+
+    decision_summary = {
+        "mode": mode,
+        "scope": scope,
+    }
+
     # -----------------------------
     # Execute (SEMANTIC PARITY WITH S2)
     # -----------------------------
     if scope == "single":
-        init_out = {
-            "scope": scope,
+        single_out = {
             "Validation Decisions": []
         }
         for req in requirements:
@@ -73,15 +81,21 @@ def main(mode: str, scope: str, limit: int | None):
                 "requirement_text": req['text'],
                 **decision
             }
-            init_out["Validation Decisions"].append(full)
+            single_out["Validation Decisions"].append(full)
 
-            print(json.dumps(init_out, indent=2, ensure_ascii=False))
+            print(json.dumps(single_out, indent=2, ensure_ascii=False))
 
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
             print(f"[S3-single] {req['req_id']} done")
-        print(json.dumps(init_out, indent=2, ensure_ascii=False))
+        print(json.dumps(single_out, indent=2, ensure_ascii=False))
+        final_decision = {
+            **decision_summary,
+            **single_out
+        }
+        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+            json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
     elif scope == "group":
         for group_id, group_reqs in groups.items():
@@ -113,11 +127,17 @@ def main(mode: str, scope: str, limit: int | None):
             decision = result["decision"]
 
             full = {
-                "mode": "group",
                 "group_id": group_id,
                 **reqi,
                 **decision
             }
+
+            final_decision = {
+            **decision_summary,
+            **full
+            }
+            with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+                json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
             print(json.dumps(full, indent=2, ensure_ascii=False))
 
