@@ -36,7 +36,6 @@ class ConsistencyAgent(BaseValidationAgent):
         )
 
         raw = self.llm.generate(prompt)["text"]
-        print("Single Consistency agent Output:", raw)
         result = extract_json_block(raw)
 
         return {
@@ -63,7 +62,6 @@ class ConsistencyAgent(BaseValidationAgent):
         )
 
         raw = self.llm.generate(prompt)["text"]
-        print("Group Consistency agent Output:", raw)
         result = extract_json_block(raw)
 
         return {

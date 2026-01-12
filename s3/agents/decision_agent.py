@@ -29,7 +29,7 @@ class DecisionAgent(BaseValidationAgent):
         return {
             "decision": {
                 "agent": "validation decision agent",
-                "mode": mode,
+                # "mode": mode,
                 "final_decision": final_decision,
                 "by_agent": aggregated,
                 "recommendations": recommendations,

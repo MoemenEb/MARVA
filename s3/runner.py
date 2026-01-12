@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import argparse
 from pathlib import Path
@@ -51,6 +52,10 @@ def main(mode: str, scope: str, limit: int | None):
     # Execute (SEMANTIC PARITY WITH S2)
     # -----------------------------
     if scope == "single":
+        init_out = {
+            "scope": scope,
+            "Validation Decisions": []
+        }
         for req in requirements:
             out_file = out_dir / f"{req['req_id']}.json"
             if out_file.exists():
@@ -59,31 +64,62 @@ def main(mode: str, scope: str, limit: int | None):
             state = {
                 "mode": "single",
                 "requirement": req,
-                "group": [req],  # placeholder, unused in single mode
             }
             result = app.invoke(state)
+            decision = result["decision"]
+
+            full = {
+                "requirement_id": req['req_id'],
+                "requirement_text": req['text'],
+                **decision
+            }
+            init_out["Validation Decisions"].append(full)
+
+            print(json.dumps(init_out, indent=2, ensure_ascii=False))
 
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
             print(f"[S3-single] {req['req_id']} done")
+        print(json.dumps(init_out, indent=2, ensure_ascii=False))
 
     elif scope == "group":
         for group_id, group_reqs in groups.items():
             if group_id is None:
                 continue  # same behavior as S2
 
-            out_file = out_dir / f"group_{group_id}.json"
-            if out_file.exists():
-                continue
+            out_file = out_dir / f"group_{group_id}_run{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            # if out_file.exists():
+            #     continue
 
             state = {
                 "mode": "group",
-                "requirement": group_reqs[0],  # required by schema
                 "group": group_reqs,
             }
 
+            reqi = {"requirements": []}
+
+            for req in group_reqs:
+                req_ids = req.get('req_id', 'unknown')
+                req_texts = req.get('text', 'unknown')
+                requir = {
+                    'req_id': req_ids,
+                    'text': req_texts
+                }
+                reqi["requirements"].append(requir)
+                
+
             result = app.invoke(state)
+            decision = result["decision"]
+
+            full = {
+                "mode": "group",
+                "group_id": group_id,
+                **reqi,
+                **decision
+            }
+
+            print(json.dumps(full, indent=2, ensure_ascii=False))
 
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)

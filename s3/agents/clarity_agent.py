@@ -23,10 +23,8 @@ class ClarityAgent(BaseValidationAgent):
         )
 
         response = self.llm.generate(filled_prompt)["text"]
-        print(f"[ClarityAgent] response: {response}")
 
         result = extract_json_block(response)
-        print("Normalized Output:", result)
 
         return {
             "clarity": {

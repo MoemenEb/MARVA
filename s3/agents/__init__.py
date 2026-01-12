@@ -16,7 +16,7 @@ def build_stub_agents():
     # -------------------------------------------------
     llm = LLMClient(
         host="http://localhost:11434",
-        model="llama3.2",
+        model="qwen3:1.7b",
         temperature=0.0,
         )
     #gemma3n:e2b

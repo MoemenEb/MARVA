@@ -26,7 +26,6 @@ class RedundancyAgent(BaseValidationAgent):
         )
 
         raw = self.llm.generate(prompt)["text"]
-        print("Redundancy Agent Raw Output:", raw)
         result = extract_json_block(raw)
 
         return {

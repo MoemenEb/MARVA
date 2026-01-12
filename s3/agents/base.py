@@ -1,14 +1,4 @@
 class BaseValidationAgent:
-    """
-    Base class for all S3 validation agents.
-
-    This class defines what makes something an *agent*
-    in MARVA S3:
-
-    - Role identity
-    - Local reasoning responsibility
-    - Structured output
-    """
 
     def __init__(self, llm):
         self.llm = llm

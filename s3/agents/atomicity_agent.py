@@ -37,7 +37,6 @@ class AtomicityAgent(BaseValidationAgent):
         )
 
         initial_raw = self.llm.generate(initial_prompt)["text"]
-        print("Initial Raw Output:", initial_raw)
 
         # -------------------------------------------------
         # Step 2 — Reflection
