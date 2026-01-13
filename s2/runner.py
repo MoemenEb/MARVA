@@ -56,17 +56,18 @@ def main(mode: str, scope: str, limit: int | None):
     decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     decision_out_dir.mkdir(parents=True, exist_ok=True)
 
+    final_decision = {
+            "mode": mode,
+            "scope": scope,
+            "Validation framework" : "S2 Validation Agent v1.0",
+            "flow_latency_seconds": 0,
+            "Validation Decisions": [],
+        }
 
     # -----------------------------
     # Execute
     # -----------------------------
     if mode == "single":
-        final_decision = {
-            "mode": "single",
-            "scope": scope,
-            "Validation Decisions": [],
-            "latency": 0
-        }
         for req in requirements:
             out_file = out_dir / f"{req['req_id']}.json"
             # if out_file.exists():
@@ -74,13 +75,12 @@ def main(mode: str, scope: str, limit: int | None):
 
             group = groups.get(req["group_id"])
             result = agent.run(req, group, mode)
-            
-            final_decision["latency"] += result["flow_latency_seconds"]
-            
+
+            final_decision["flow_latency_seconds"] += result["flow_latency_seconds"]
+
             decision = {
-                "req_id": req["req_id"],
-                "req_text": req["text"],
-                "agent" : "S2 Validator Agent",
+                "requirement_id": req["req_id"],
+                "requirement_text": req["text"],
                 "decision": result["summary"]["output"]["final_status"],
                 "by_agent" : {k: v["output"]["decision"] for k, v in result["results"].items()},
                 "recommendations": result["summary"]["output"]["recommendations"],
@@ -97,12 +97,6 @@ def main(mode: str, scope: str, limit: int | None):
 
 
     elif mode == "group":
-        final_decision = {
-            "mode": "group",
-            "scope": scope,
-            "Validation Decisions": [],
-            "latency": 0
-        }
         for group_id, group_reqs in groups.items():
             if group_id is None:
                 continue  # skip ungrouped if needed
@@ -116,17 +110,16 @@ def main(mode: str, scope: str, limit: int | None):
                 req_ids = req.get('req_id', 'unknown')
                 req_texts = req.get('text', 'unknown')
                 requir = {
-                    'req_id': req_ids,
-                    'text': req_texts
+                    'requirement_id': req_ids,
+                    'requirement_text': req_texts
                 }
                 reqi["requirements"].append(requir)
                 
             # One execution per group
             result = agent.run(None, group_reqs, mode)
-            final_decision["latency"] += result["flow_latency_seconds"]
+            final_decision["flow_latency_seconds"] += result["flow_latency_seconds"]
             decision = {
                 **reqi,
-                "agent" : "S2 Validator Agent",
                 "decision": result["summary"]["output"]["final_status"],
                 "by_agent" : {k: v["output"]["decision"] for k, v in result["results"].items()},
                 "recommendations": result["summary"]["output"]["recommendations"],

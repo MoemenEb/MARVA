@@ -43,8 +43,9 @@ def main(mode: str, scope: str, limit: int | None):
     decision_summary = {
         "mode": mode,
         "scope": scope,
+        "Validation framework" : "S1 Validation Agent v1.0",
+        "flow_latency_seconds" : 0,
         "validation_decision": [],
-        "flow_latency_seconds" : 0
     }
     decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     decision_out_dir.mkdir(parents=True, exist_ok=True)
@@ -56,8 +57,8 @@ def main(mode: str, scope: str, limit: int | None):
         
         for req in requirements:
             validation_summary = {
-                "req_id": req["req_id"],
-                "req_text": req["text"],
+                "requirement_id": req["req_id"],
+                "requirement_text": req["text"],
             }
             
             result = pipeline.run_single(req)
@@ -67,6 +68,7 @@ def main(mode: str, scope: str, limit: int | None):
                 for a in json_result["agents"]
             }
             json_result.pop("agents", None)
+            json_result.pop("agent", None)
             json_result["by_agent"] = by_agent
 
             validation_summary = {
@@ -93,10 +95,11 @@ def main(mode: str, scope: str, limit: int | None):
                 for a in json_result["agents"]
             }
         json_result.pop("agents", None)
+        json_result.pop("agent", None)
         json_result["by_agent"] = by_agent
         validation_summary = {
-            "req_ids": [r["req_id"] for r in requirements],
-            "req_texts": [r["text"] for r in requirements],
+            "requirement_id": [r["req_id"] for r in requirements],
+            "requirement_text": [r["text"] for r in requirements],
             **json_result,
         }
         decision_summary["validation_decision"].append(validation_summary)

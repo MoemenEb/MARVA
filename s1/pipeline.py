@@ -22,8 +22,7 @@ class S1Pipeline:
         response = self.llm.generate(prompt)
 
         return {
-            "stage": "S1",
-            "scope": "single",
+            "mode": "single",
             "req_id": requirement["req_id"],
             "source": requirement["source"],
             "llm_output": response["text"],
@@ -42,11 +41,9 @@ class S1Pipeline:
         response = self.llm.generate(prompt)
 
         return {
-            "stage": "S1",
-            "scope": "group",
+            "mode": "group",
             "req_ids": [r["req_id"] for r in requirements],
             "sources": list({r["source"] for r in requirements}),
             "llm_output": response["text"],
             "latency_ms": response["latency_ms"],
-            "model": response["model"],
         }

@@ -56,6 +56,8 @@ def main(mode: str, scope: str, limit: int | None):
     decision_summary = {
         "mode": mode,
         "scope": scope,
+        "validation framework" : "MARVA v1.0",
+        "flow_latency_seconds": None
     }
 
     # -----------------------------
@@ -90,11 +92,11 @@ def main(mode: str, scope: str, limit: int | None):
 
             print(f"[S3-single] {req['req_id']} done")
         endTime = time.perf_counter()
-        flowlatency = int((endTime - startTime))    
+        flowlatency = int((endTime - startTime))   
+        decision_summary["flow_latency_seconds"] = flowlatency 
         final_decision = {
             **decision_summary,
             **single_out,
-            "flow_latency_seconds": flowlatency
         }
         with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
             json.dump(final_decision, f, indent=2, ensure_ascii=False)
@@ -106,8 +108,6 @@ def main(mode: str, scope: str, limit: int | None):
                 continue  # same behavior as S2
 
             out_file = out_dir / f"group_{group_id}_run{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            # if out_file.exists():
-            #     continue
 
             state = {
                 "mode": "group",
@@ -136,10 +136,10 @@ def main(mode: str, scope: str, limit: int | None):
             }
             endTime = time.perf_counter()
             flowlatency = int((endTime - startTime))
+            decision_summary["flow_latency_seconds"] = flowlatency
             final_decision = {
             **decision_summary,
             **full,
-            "flow_latency_seconds": flowlatency
             }
             with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
                 json.dump(final_decision, f, indent=2, ensure_ascii=False)
