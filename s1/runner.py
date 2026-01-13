@@ -21,7 +21,7 @@ def main(mode: str, scope: str, limit: int | None):
     with open(DATA_PATH, encoding="utf-8") as f:
         requirements = json.load(f)
 
-    requirements = filter_requirements(requirements, mode)
+    requirements = filter_requirements(requirements, scope)
 
     if limit:
         requirements = requirements[:limit]

@@ -35,6 +35,9 @@ Recommendations
 If issues are detected, provide high-level recommendations only
 Do not propose detailed rewrites or solutions.
 
+requirement/s: 
+{{REQUIREMENT}}
+
 Step 1 : Internal use only
 > Requirmeent is atomic 
 > Requirmeent is Clear

@@ -34,6 +34,10 @@ Recommendations
 If issues are detected, provide high-level recommendations only
 Do not propose detailed rewrites or solutions.
 
+requirement/s: 
+{{REQUIREMENT}}
+
+
 Step 1 : Internal use only
 > Requirments doesn't have redundancy 
 > Requirmeents are complete and no missing information

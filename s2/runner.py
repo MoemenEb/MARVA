@@ -19,7 +19,7 @@ def main(mode: str, scope: str, limit: int | None):
     with open(DATA_PATH, encoding="utf-8") as f:
         requirements = json.load(f)
 
-    requirements = filter_requirements(requirements, mode)
+    requirements = filter_requirements(requirements, scope)
 
     if limit is not None:
         requirements = requirements[:limit]
@@ -73,7 +73,7 @@ def main(mode: str, scope: str, limit: int | None):
             #     continue
 
             group = groups.get(req["group_id"])
-            result = agent.run(req, group, scope)
+            result = agent.run(req, group, mode)
             
             final_decision["latency"] += result["flow_latency_seconds"]
             
@@ -122,7 +122,7 @@ def main(mode: str, scope: str, limit: int | None):
                 reqi["requirements"].append(requir)
                 
             # One execution per group
-            result = agent.run(None, group_reqs, scope)
+            result = agent.run(None, group_reqs, mode)
             final_decision["latency"] += result["flow_latency_seconds"]
             decision = {
                 **reqi,
