@@ -75,8 +75,6 @@ def main(mode: str, scope: str, limit: int | None):
             group = groups.get(req["group_id"])
             result = agent.run(req, group, scope)
             
-            print(result)
-
             final_decision["latency"] += result["flow_latency_seconds"]
             
             decision = {
@@ -99,6 +97,12 @@ def main(mode: str, scope: str, limit: int | None):
 
 
     elif scope == "group":
+        final_decision = {
+            "scope": "group",
+            "source_mode": mode,
+            "Validation Decisions": [],
+            "latency": 0
+        }
         for group_id, group_reqs in groups.items():
             if group_id is None:
                 continue  # skip ungrouped if needed
@@ -106,14 +110,36 @@ def main(mode: str, scope: str, limit: int | None):
             out_file = out_dir / f"group_{group_id}.json"
             # if out_file.exists():
             #     continue
+            reqi = {"requirements": []}
 
+            for req in group_reqs:
+                req_ids = req.get('req_id', 'unknown')
+                req_texts = req.get('text', 'unknown')
+                requir = {
+                    'req_id': req_ids,
+                    'text': req_texts
+                }
+                reqi["requirements"].append(requir)
+                
             # One execution per group
-            final_decision = agent.run(None, group_reqs, scope)
+            result = agent.run(None, group_reqs, scope)
+            final_decision["latency"] += result["flow_latency_seconds"]
+            decision = {
+                **reqi,
+                "agent" : "S2 Validator Agent",
+                "decision": result["summary"]["output"]["final_status"],
+                "by_agent" : {k: v["output"]["decision"] for k, v in result["results"].items()},
+                "recommendations": result["summary"]["output"]["recommendations"],
+            }
+            final_decision["Validation Decisions"].append(decision)
 
             with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(final_decision, f, indent=2, ensure_ascii=False)
+                json.dump(result, f, indent=2, ensure_ascii=False)
 
             print(f"[S2-group] {group_id} done")
+            
+        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+            json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
 
 
