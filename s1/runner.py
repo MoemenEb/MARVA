@@ -1,17 +1,22 @@
+import datetime
 import json
 import argparse
 from pathlib import Path
 
 from common.llm_client import LLMClient
 from common.dataset_selector import filter_requirements
+from common.normalization import extract_json_block
 from s1.pipeline import S1Pipeline
 
 DATA_PATH = Path("data/processed/requirements.json")
+DECISON_OUTPUT_PATH = Path("out/s1_decisions/")
 
-OUT_DIR = Path("s1/outputs/{mode}/{scope}")
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
 
 def main(mode: str, scope: str, limit: int | None):
+    OUT_DIR = Path("s1/outputs/{mode}/{scope}")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     with open(DATA_PATH, encoding="utf-8") as f:
         requirements = json.load(f)
 
@@ -22,7 +27,7 @@ def main(mode: str, scope: str, limit: int | None):
 
     llm = LLMClient(
         host="http://localhost:11434",
-        model="deepseek-r1:1.5b"
+        model="qwen3:1.7b",
     )
     #gemma3n:e2b
     #gemma3:4b
@@ -34,13 +39,40 @@ def main(mode: str, scope: str, limit: int | None):
     #ministral-3:3b
 
     pipeline = S1Pipeline(llm)
-
+    decision_summary = {
+        "mode": scope,
+        "scope": mode,
+        "validation_decision": [],
+    }
+    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    decision_out_dir.mkdir(parents=True, exist_ok=True)
+    
     # -----------------------------
     # SINGLE SCOPE
     # -----------------------------
     if scope == "single":
         for req in requirements:
+            validation_summary = {
+                "req_id": req["req_id"],
+                "req_text": req["text"],
+            }
             result = pipeline.run_single(req)
+            json_result = extract_json_block(result["llm_output"])
+            by_agent = {
+                a["dimension"]: a["status"]
+                for a in json_result["agents"]
+            }
+            json_result.pop("agents", None)
+            json_result["by_agent"] = by_agent
+
+            validation_summary = {
+                **validation_summary,
+                **json_result,
+            }
+
+            decision_summary["validation_decision"].append(validation_summary)
+
+            print("json_result:", json_result)
             # OUT_DIR = Path("s1/output/single")
             # OUT_DIR.mkdir(parents=True, exist_ok=True)
             out_file = OUT_DIR / f"{req['req_id']}.json"
@@ -48,12 +80,27 @@ def main(mode: str, scope: str, limit: int | None):
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
             print(f"[S1|single] {req['req_id']} done")
+        print(json.dumps(decision_summary, indent=2, ensure_ascii=False))
 
     # -----------------------------
     # GROUP SCOPE
     # -----------------------------
     elif scope == "group":
         result = pipeline.run_group(requirements)
+        json_result = extract_json_block(result["llm_output"])
+        by_agent = {
+                a["dimension"]: a["status"]
+                for a in json_result["agents"]
+            }
+        json_result.pop("agents", None)
+        json_result["by_agent"] = by_agent
+        validation_summary = {
+            "req_ids": [r["req_id"] for r in requirements],
+            "req_texts": [r["text"] for r in requirements],
+            **json_result,
+        }
+        decision_summary["validation_decision"].append(validation_summary)
+        print(json.dumps(decision_summary, indent=2, ensure_ascii=False))
         # OUT_DIR = Path("s1/output/group")
         # OUT_DIR.mkdir(parents=True, exist_ok=True)
         out_file = OUT_DIR / "s1_group.json"
@@ -65,7 +112,9 @@ def main(mode: str, scope: str, limit: int | None):
     else:
         raise ValueError(f"Invalid scope: {scope}")
 
-
+    with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+        json.dump(decision_summary, f, indent=2, ensure_ascii=False)
+        
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(

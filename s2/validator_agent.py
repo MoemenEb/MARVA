@@ -1,5 +1,9 @@
+from common.normalization import extract_json_block
 from common.prompt_loader import load_prompt
+import time
 
+## TODO: 
+## 1. Revisit the VDA prompt.
 
 class S2ValidatorAgent:
     """
@@ -38,16 +42,7 @@ class S2ValidatorAgent:
     # --------------------------------------------------
 
     def validate_single(self, requirement: dict) -> dict:
-        """
-        Executes ONLY single-requirement validations.
-
-        Each validation:
-        - Uses one focused prompt
-        - Triggers one SLM call
-        - Result is stored verbatim
-        """
-
-        results = {"scope": "single"}
+        results = {}
 
         for key in [
             "atomicity",
@@ -60,9 +55,10 @@ class S2ValidatorAgent:
             )
             # print(f"Prompt for {key}:\n{prompt}\n")
             response = self.llm.generate(prompt)
+            json_result = extract_json_block(response["text"])
 
             results[key] = {
-                "output": response["text"],
+                "output": json_result,
                 "latency_ms": response["latency_ms"],
             }
 
@@ -73,14 +69,7 @@ class S2ValidatorAgent:
     # --------------------------------------------------
 
     def validate_group(self, group: list[dict]) -> dict:
-        """
-        Executes ONLY group-level validations.
-
-        The agent reasons over the group as a whole.
-        It does not produce per-requirement judgments here.
-        """
-
-        results = {"scope": "group"}
+        results = {}
 
         group_text = "\n".join(
             f"- {req['text']}" for req in group
@@ -96,9 +85,11 @@ class S2ValidatorAgent:
             )
 
             response = self.llm.generate(prompt)
+            
+            json_result = extract_json_block(response["text"])
 
             results[key] = {
-                "output": response["text"],
+                "output": json_result,
                 "latency_ms": response["latency_ms"],
             }
 
@@ -107,20 +98,16 @@ class S2ValidatorAgent:
     # --------------------------------------------------
     # Validation summary scope
     # --------------------------------------------------
-    def summarize_validation(self, validation_results: dict) -> dict:
-        """
-        Summarizes validation results across scopes.
-
-        This method can be expanded to provide
-        aggregated insights if needed.
-        """
+    def summarize_validation(self, validation_results: dict, requirement) -> dict:
         prompt = self.prompts["summary"].replace(
-            "{{VALIDATION_RESULTS}}", str(validation_results)
-        )
+            "{{REQUIREMENT}}", str(requirement)
+        ).replace("{{VALIDATION_RESULTS}}", str(validation_results))
         response = self.llm.generate(prompt)
 
+        json_block = extract_json_block(response["text"])
+
         validation_summary = {
-            "output": response["text"],
+            "output": json_block,
             "latency_ms": response["latency_ms"],
         }
 
@@ -132,45 +119,46 @@ class S2ValidatorAgent:
     # --------------------------------------------------
 
     def run(self, requirement: dict | None, group: list[dict] | None, scope: str) -> dict:
-        """
-        Executes S2 validation under a single scope.
-
-        scope:
-        - 'single' → per-requirement execution
-        - 'group'  → per-group execution
-        """
-
         if scope == "single":
             if requirement is None:
                 raise ValueError("Single scope requested but no requirement provided")
-
+            startTime = time.perf_counter()
             results = self.validate_single(requirement)
-            summary = self.summarize_validation(results)
+            summary = self.summarize_validation(results, requirement)
+            endTime = time.perf_counter()
+            flowlatency = int((endTime - startTime))
 
             return {
                 "scope": "single",
                 "req_id": requirement["req_id"],
+                "requirement_text": requirement["text"],
                 "source": requirement["source"],
-                "group_id": requirement["group_id"],
                 "results": results,
-                "summary": summary
+                "summary": summary,
+                "flow_latency_seconds": flowlatency
             }
 
         elif scope == "group":
             if not group:
                 raise ValueError("Group scope requested but no group context provided")
-
+            startTime = time.perf_counter()
             results = self.validate_group(group)
-            summary = self.summarize_validation(results)
+            summary = self.summarize_validation(results, group)
+            endTime = time.perf_counter()
+            flowlatency = int((endTime - startTime))
 
             return {
                 "scope": "group",
                 "group_id": group[0]["group_id"],
                 "source": group[0]["source"],
                 "requirement_ids": [r["req_id"] for r in group],
+                "requirement_texts": [r["text"] for r in group],
                 "results": results,
-                "summary": summary
+                "summary": summary,
+                "flow_latency_seconds": flowlatency
             }
 
         else:
             raise ValueError(f"Unknown S2 scope: {scope}")
+
+    

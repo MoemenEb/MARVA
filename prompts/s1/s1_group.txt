@@ -61,12 +61,11 @@ Do not include explanations outside the schema
 Output Schema (JSON Only)
 {
   "agent": "S1 Validation Agent",
-  "input_mode": "group",
   "status": "PASS | FLAG | FAIL",
-  "observations": [
+  "agents": [
     {
       "dimension": "redundancy | completion | consistency",
-      "explanation": "<1–2 factual sentences>"
+      "status" : "PASS | FAIL | FLAG ",
     }
   ],
   "recommendations": [

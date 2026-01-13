@@ -3,10 +3,6 @@ from common.prompt_loader import load_prompt
 
 
 class S1Pipeline:
-    """
-    S1: Exploratory baseline stage.
-    Supports explicit SINGLE and GROUP scopes.
-    """
 
     def __init__(
         self,
@@ -32,7 +28,6 @@ class S1Pipeline:
             "source": requirement["source"],
             "llm_output": response["text"],
             "latency_ms": response["latency_ms"],
-            "model": response["model"],
         }
 
     def run_group(self, requirements: list[dict]) -> dict:

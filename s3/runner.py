@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import argparse
 from pathlib import Path
+import time
 
 from common.dataset_selector import filter_requirements
 from s2.grouping import group_requirements
@@ -49,7 +50,7 @@ def main(mode: str, scope: str, limit: int | None):
     out_dir = Path(f"s3/outputs/{mode}/{scope}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{mode}_{scope}")
+    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     decision_out_dir.mkdir(parents=True, exist_ok=True)
 
     decision_summary = {
@@ -61,13 +62,14 @@ def main(mode: str, scope: str, limit: int | None):
     # Execute (SEMANTIC PARITY WITH S2)
     # -----------------------------
     if scope == "single":
+        startTime = time.perf_counter()
         single_out = {
             "Validation Decisions": []
         }
         for req in requirements:
             out_file = out_dir / f"{req['req_id']}.json"
-            if out_file.exists():
-                continue
+            # if out_file.exists():
+            #     continue
 
             state = {
                 "mode": "single",
@@ -89,15 +91,18 @@ def main(mode: str, scope: str, limit: int | None):
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
             print(f"[S3-single] {req['req_id']} done")
-        print(json.dumps(single_out, indent=2, ensure_ascii=False))
+        endTime = time.perf_counter()
+        flowlatency = int((endTime - startTime))    
         final_decision = {
             **decision_summary,
-            **single_out
+            **single_out,
+            "flow_latency_seconds": flowlatency
         }
         with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
             json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
     elif scope == "group":
+        startTime = time.perf_counter()
         for group_id, group_reqs in groups.items():
             if group_id is None:
                 continue  # same behavior as S2
@@ -131,10 +136,12 @@ def main(mode: str, scope: str, limit: int | None):
                 **reqi,
                 **decision
             }
-
+            endTime = time.perf_counter()
+            flowlatency = int((endTime - startTime))
             final_decision = {
             **decision_summary,
-            **full
+            **full,
+            "flow_latency_seconds": flowlatency
             }
             with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
                 json.dump(final_decision, f, indent=2, ensure_ascii=False)

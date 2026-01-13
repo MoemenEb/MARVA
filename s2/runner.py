@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import argparse
 from pathlib import Path
@@ -8,6 +9,7 @@ from s2.grouping import group_requirements
 from s2.validator_agent import S2ValidatorAgent
 
 DATA_PATH = Path("data/processed/requirements_grouped.json")
+DECISON_OUTPUT_PATH = Path("out/s2_decisions/")
 
 
 def main(mode: str, scope: str, limit: int | None):
@@ -34,7 +36,7 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     llm = LLMClient(
         host="http://localhost:11434",
-        model="deepseek-r1:1.5b"
+        model="qwen3:1.7b",
     )
     #gemma3n:e2b
     #gemma3:4b
@@ -51,22 +53,49 @@ def main(mode: str, scope: str, limit: int | None):
     out_dir = Path(f"s2/outputs/{mode}/{scope}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    decision_out_dir.mkdir(parents=True, exist_ok=True)
+
+
     # -----------------------------
     # Execute
     # -----------------------------
     if scope == "single":
+        final_decision = {
+            "scope": "single",
+            "source_mode": mode,
+            "Validation Decisions": [],
+            "latency": 0
+        }
         for req in requirements:
             out_file = out_dir / f"{req['req_id']}.json"
-            if out_file.exists():
-                continue
+            # if out_file.exists():
+            #     continue
 
             group = groups.get(req["group_id"])
             result = agent.run(req, group, scope)
+            
+            print(result)
+
+            final_decision["latency"] += result["flow_latency_seconds"]
+            
+            decision = {
+                "req_id": req["req_id"],
+                "req_text": req["text"],
+                "agent" : "S2 Validator Agent",
+                "decision": result["summary"]["output"]["final_status"],
+                "by_agent" : {k: v["output"]["decision"] for k, v in result["results"].items()},
+                "recommendations": result["summary"]["output"]["recommendations"],
+            }
+            final_decision["Validation Decisions"].append(decision)
 
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
             print(f"[S2-single] {req['req_id']} done")
+
+        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+            json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
 
     elif scope == "group":
@@ -75,14 +104,14 @@ def main(mode: str, scope: str, limit: int | None):
                 continue  # skip ungrouped if needed
 
             out_file = out_dir / f"group_{group_id}.json"
-            if out_file.exists():
-                continue
+            # if out_file.exists():
+            #     continue
 
             # One execution per group
-            result = agent.run(None, group_reqs, scope)
+            final_decision = agent.run(None, group_reqs, scope)
 
             with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
+                json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
             print(f"[S2-group] {group_id} done")
 
