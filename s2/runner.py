@@ -50,7 +50,7 @@ def main(mode: str, scope: str, limit: int | None):
 
     agent = S2ValidatorAgent(llm)
 
-    out_dir = Path(f"s2/outputs/{mode}/{scope}")
+    out_dir = Path(f"s2/outputs/{scope}/{mode}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
@@ -60,10 +60,10 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     # Execute
     # -----------------------------
-    if scope == "single":
+    if mode == "single":
         final_decision = {
-            "scope": "single",
-            "source_mode": mode,
+            "mode": "single",
+            "scope": scope,
             "Validation Decisions": [],
             "latency": 0
         }
@@ -96,10 +96,10 @@ def main(mode: str, scope: str, limit: int | None):
             json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
 
-    elif scope == "group":
+    elif mode == "group":
         final_decision = {
-            "scope": "group",
-            "source_mode": mode,
+            "mode": "group",
+            "scope": scope,
             "Validation Decisions": [],
             "latency": 0
         }
@@ -145,8 +145,8 @@ def main(mode: str, scope: str, limit: int | None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run S2 baseline")
-    parser.add_argument("--mode", required=True)
-    parser.add_argument("--scope", required=True, choices=["single", "group"])
+    parser.add_argument("--scope", required=True)
+    parser.add_argument("--mode", required=True, choices=["single", "group"])
     parser.add_argument("--limit", type=int, default=None)
 
     args = parser.parse_args()

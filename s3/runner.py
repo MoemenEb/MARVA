@@ -28,7 +28,7 @@ def main(mode: str, scope: str, limit: int | None):
     with open(DATA_PATH, encoding="utf-8") as f:
         requirements = json.load(f)
 
-    requirements = filter_requirements(requirements, mode)
+    requirements = filter_requirements(requirements, scope)
 
     if limit is not None:
         requirements = requirements[:limit]
@@ -47,7 +47,7 @@ def main(mode: str, scope: str, limit: int | None):
     graph = build_marva_s3_graph(agents)
     app = graph.compile()
 
-    out_dir = Path(f"s3/outputs/{mode}/{scope}")
+    out_dir = Path(f"s3/outputs/{scope}/{mode}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
@@ -61,7 +61,7 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     # Execute (SEMANTIC PARITY WITH S2)
     # -----------------------------
-    if scope == "single":
+    if mode == "single":
         startTime = time.perf_counter()
         single_out = {
             "Validation Decisions": []
@@ -85,8 +85,6 @@ def main(mode: str, scope: str, limit: int | None):
             }
             single_out["Validation Decisions"].append(full)
 
-            print(json.dumps(single_out, indent=2, ensure_ascii=False))
-
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
@@ -101,7 +99,7 @@ def main(mode: str, scope: str, limit: int | None):
         with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
             json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
-    elif scope == "group":
+    elif mode == "group":
         startTime = time.perf_counter()
         for group_id, group_reqs in groups.items():
             if group_id is None:
@@ -146,8 +144,6 @@ def main(mode: str, scope: str, limit: int | None):
             with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
                 json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
-            print(json.dumps(full, indent=2, ensure_ascii=False))
-
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
@@ -156,8 +152,8 @@ def main(mode: str, scope: str, limit: int | None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run S3 (MARVA)")
-    parser.add_argument("--mode", required=True)
-    parser.add_argument("--scope", required=True, choices=["single", "group"])
+    parser.add_argument("--scope", required=True)
+    parser.add_argument("--mode", required=True, choices=["single", "group"])
     parser.add_argument("--limit", type=int, default=None)
 
     args = parser.parse_args()

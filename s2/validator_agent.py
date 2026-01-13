@@ -2,20 +2,9 @@ from common.normalization import extract_json_block
 from common.prompt_loader import load_prompt
 import time
 
-## TODO: 
-## 1. Revisit the VDA prompt.
+
 
 class S2ValidatorAgent:
-    """
-    S2 Validator Agent (Single Agent, Multi-Call, Single Scope)
-
-    This agent:
-    - Owns the validation workflow
-    - Executes multiple SLM calls procedurally
-    - Operates under exactly ONE scope per run
-
-    All reasoning is delegated to the SLM.
-    """
 
     def __init__(self, llm):
         self.llm = llm
@@ -118,8 +107,8 @@ class S2ValidatorAgent:
     # Entry point
     # --------------------------------------------------
 
-    def run(self, requirement: dict | None, group: list[dict] | None, scope: str) -> dict:
-        if scope == "single":
+    def run(self, requirement: dict | None, group: list[dict] | None, mode: str) -> dict:
+        if mode == "single":
             if requirement is None:
                 raise ValueError("Single scope requested but no requirement provided")
             startTime = time.perf_counter()
@@ -129,7 +118,7 @@ class S2ValidatorAgent:
             flowlatency = int((endTime - startTime))
 
             return {
-                "scope": "single",
+                "mode": "single",
                 "req_id": requirement["req_id"],
                 "requirement_text": requirement["text"],
                 "source": requirement["source"],
@@ -138,9 +127,9 @@ class S2ValidatorAgent:
                 "flow_latency_seconds": flowlatency
             }
 
-        elif scope == "group":
+        elif mode == "group":
             if not group:
-                raise ValueError("Group scope requested but no group context provided")
+                raise ValueError("Group mode requested but no group context provided")
             startTime = time.perf_counter()
             results = self.validate_group(group)
             summary = self.summarize_validation(results, group)
@@ -148,7 +137,7 @@ class S2ValidatorAgent:
             flowlatency = int((endTime - startTime))
 
             return {
-                "scope": "group",
+                "mode": "group",
                 "group_id": group[0]["group_id"],
                 "source": group[0]["source"],
                 "requirement_ids": [r["req_id"] for r in group],
@@ -159,6 +148,6 @@ class S2ValidatorAgent:
             }
 
         else:
-            raise ValueError(f"Unknown S2 scope: {scope}")
+            raise ValueError(f"Unknown S2 mode: {mode}")
 
     

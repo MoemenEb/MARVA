@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import argparse
+import time
 from pathlib import Path
 
 from common.llm_client import LLMClient
@@ -15,7 +16,7 @@ DECISON_OUTPUT_PATH = Path("out/s1_decisions/")
 
 
 def main(mode: str, scope: str, limit: int | None):
-    OUT_DIR = Path("s1/outputs/{mode}/{scope}")
+    OUT_DIR = Path("s1/outputs/{scope}/{mode}")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     with open(DATA_PATH, encoding="utf-8") as f:
         requirements = json.load(f)
@@ -40,22 +41,25 @@ def main(mode: str, scope: str, limit: int | None):
 
     pipeline = S1Pipeline(llm)
     decision_summary = {
-        "mode": scope,
-        "scope": mode,
+        "mode": mode,
+        "scope": scope,
         "validation_decision": [],
+        "flow_latency_seconds" : 0
     }
     decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     decision_out_dir.mkdir(parents=True, exist_ok=True)
-    
+    startTime = time.perf_counter()
     # -----------------------------
     # SINGLE SCOPE
     # -----------------------------
-    if scope == "single":
+    if mode == "single":
+        
         for req in requirements:
             validation_summary = {
                 "req_id": req["req_id"],
                 "req_text": req["text"],
             }
+            
             result = pipeline.run_single(req)
             json_result = extract_json_block(result["llm_output"])
             by_agent = {
@@ -72,20 +76,16 @@ def main(mode: str, scope: str, limit: int | None):
 
             decision_summary["validation_decision"].append(validation_summary)
 
-            print("json_result:", json_result)
-            # OUT_DIR = Path("s1/output/single")
-            # OUT_DIR.mkdir(parents=True, exist_ok=True)
             out_file = OUT_DIR / f"{req['req_id']}.json"
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
             print(f"[S1|single] {req['req_id']} done")
-        print(json.dumps(decision_summary, indent=2, ensure_ascii=False))
 
     # -----------------------------
     # GROUP SCOPE
     # -----------------------------
-    elif scope == "group":
+    elif mode == "group":
         result = pipeline.run_group(requirements)
         json_result = extract_json_block(result["llm_output"])
         by_agent = {
@@ -100,9 +100,7 @@ def main(mode: str, scope: str, limit: int | None):
             **json_result,
         }
         decision_summary["validation_decision"].append(validation_summary)
-        print(json.dumps(decision_summary, indent=2, ensure_ascii=False))
-        # OUT_DIR = Path("s1/output/group")
-        # OUT_DIR.mkdir(parents=True, exist_ok=True)
+
         out_file = OUT_DIR / "s1_group.json"
         with open(out_file, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2, ensure_ascii=False)
@@ -112,13 +110,16 @@ def main(mode: str, scope: str, limit: int | None):
     else:
         raise ValueError(f"Invalid scope: {scope}")
 
+    endTime = time.perf_counter()
+    flowlatency = int((endTime - startTime))
+    decision_summary["flow_latency_seconds"] = flowlatency
     with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
         json.dump(decision_summary, f, indent=2, ensure_ascii=False)
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--mode",
+        "--scope",
         required=True,
         help="Execution mode: small | large | all | dataset name",
     )
@@ -129,7 +130,7 @@ if __name__ == "__main__":
         help="Max number of requirements to process",
     )
     parser.add_argument(
-        "--scope",
+        "--mode",
         required=True,
         choices=["single", "group"],
         help="S1 execution scope",
