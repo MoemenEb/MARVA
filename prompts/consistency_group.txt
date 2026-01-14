@@ -23,7 +23,7 @@ Overlapping scopes SHALL NOT be treated as contradictions.
 Missing information SHALL NOT be treated as inconsistency.
 
 
-
+Requirement under test: 
 {{REQUIREMENT}}
 
 Internal Checklist (Do Not Show)
@@ -65,7 +65,7 @@ Step 4: Final Output (Show Only This)
 
 Your final response should be in the following JSON format only: 
 {
- "decision": "PASS | FAIL",
+ "decision": "PASS | FLAG",
  "issues": "Single sentence describing the contradiction across requirements if any; empty if PASS."
 }
 

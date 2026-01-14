@@ -24,7 +24,7 @@ The presence of multiple entities, options, recipients, or alternatives (e.g., â
 
 
 
-{{REQUIREMENT}}
+Requirement under test: {{REQUIREMENT}}
 
 Step 1: Internal Checklist (Do Not Show)
 The requirement doesnâ€™t contradict itself.
@@ -57,7 +57,7 @@ Step 4: Final Output (Show Only This)
 Your final response should be in the following JSON format only: 
 
 {
- "decision": "PASS | FAIL",
+ "decision": "PASS | FLAG",
  "issues": "Single sentence describing the contradiction if any; empty if PASS."
 }
 

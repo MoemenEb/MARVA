@@ -22,7 +22,7 @@ Environmental, organizational, or lifecycle context SHALL NOT be assumed missing
 Actors may be systems, documents, data, or artifacts.
 
 
-
+Requirement under test: 
 {{REQUIREMENT}}
 
 Step 1: Internal Checklist (Do Not Show)
@@ -60,7 +60,7 @@ Step 4: Final Output (Show Only This)
 
 Your final response should be in the following JSON format only: 
 {
- "decision": "PASS | FAIL",
+ "decision": "PASS | FLAG",
  "issues": "Single sentence describing the missing essential element across the group if any; empty if PASS."
 }
 

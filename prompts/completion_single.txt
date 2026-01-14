@@ -21,7 +21,7 @@ Actors may be systems, documents, data, or artifacts.
 
 
 
-{{REQUIREMENT}}
+Requirement under test: {{REQUIREMENT}}
 
 Step 1: Internal Checklist (Do Not Show)
 Actor is identifiable.
@@ -55,7 +55,7 @@ Based on the previous responses, what is your final verdict? Does the requiremen
 Your final response should be in the following JSON format only: 
 
 {
- "decision": "PASS | FAIL",
+ "decision": "PASS | FLAG",
  "issues": "Single sentence describing the missing essential element if any; empty if PASS."
 }
 

@@ -1,33 +1,15 @@
-import json
 from s3.agents.base import BaseValidationAgent
 from s3.agents.normalization import extract_json_block
-
+from s3.agents.robuster import MajorityArbitrator
 
 class AtomicityAgent(BaseValidationAgent):
-    """
-    Atomicity Validation Agent (S3)
-
-    - Single-scope only
-    - Hard gate
-    - Two-step reasoning (initial + reflection)
-    - Canonical MARVA output
-    """
+    RUNS = 3
 
     def __init__(self, llm, prompts: dict[str, str]):
         super().__init__(llm)
         self.prompts = prompts
 
-    def run(self, input_data: dict) -> dict:
-        """
-        Expects input_data to contain:
-        {
-            "requirement": {
-                "req_id": "...",
-                "text": "..."
-            }
-        }
-        """
-        requirement_text = input_data["requirement"]["text"]
+    def single_run(self, requirement_text: dict) -> dict:
 
         # -------------------------------------------------
         # Step 1 — Initial judgment
@@ -39,24 +21,43 @@ class AtomicityAgent(BaseValidationAgent):
         initial_raw = self.llm.generate(initial_prompt)["text"]
 
         # -------------------------------------------------
-        # Step 2 — Reflection
-        # -------------------------------------------------
-        # reflection_prompt = self.prompts["reflection"].replace(
-        #     "{{INITIAL_JUDGMENT}}", initial_raw
-        # )
-
-        # refined_raw = self.llm.generate(reflection_prompt)["text"]
-
-        # -------------------------------------------------
-        # Step 3 — Normalize output
+        # Step 2 — Normalize output
         # -------------------------------------------------
         result = extract_json_block(initial_raw)
 
         return {
-            "atomicity": {
-                "agent": "atomicity",
-                "mode": "single",
                 "decision": result["decision"],
                 "issues": result.get("issues", []),
+            }
+    
+    def run(self, input_data: dict) -> dict:
+
+        requirement_text = input_data["requirement"]["text"]
+
+        # -------------------------------------------------
+        # Step 1 — Redundant executions
+        # -------------------------------------------------
+        runs = [
+            self.single_run(requirement_text)
+            for _ in range(self.RUNS)
+        ]
+
+        # -------------------------------------------------
+        # Step 2 — Majority arbitration
+        # -------------------------------------------------
+        arbitration = MajorityArbitrator.arbitrate(runs)
+
+        # -------------------------------------------------
+        # Step 3 — Final normalized output
+        # -------------------------------------------------
+        return {
+            "atomicity": {
+                "agent": "atomicity",
+                "mode": "redundant",
+                "runs": self.RUNS,
+                "decision": arbitration["final_decision"],
+                "confidence": arbitration["confidence"],
+                "issues": arbitration["issues"],
+                "raw_runs": arbitration["runs"],
             }
         }

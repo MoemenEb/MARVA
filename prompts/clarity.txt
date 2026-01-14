@@ -5,7 +5,7 @@ You must not assess any other validation dimension (atomicity, completeness, con
 If an issue belongs to another validation dimension, ignore it completely.
 
 Clarity Definition
-A requirement is clear if it can be interpreted in exactly one way by competent stakeholders without relying on unstated assumptions.
+A requirement is clear if it can be interpreted in exactly one way without relying on unstated assumptions.
 
 Clarity Validation Rules
 Ambiguity Rule: The requirement must not contain terms, phrases, or structures that allow multiple reasonable interpretations.
@@ -18,7 +18,7 @@ High-level or abstract wording SHALL NOT be treated as ambiguity if the meaning 
 Non-functional constraints (security, performance, availability, compliance, usability) SHALL be evaluated only for ambiguity, not for measurability or feasibility.
 Domain-common terms with one accepted meaning SHALL NOT be treated as ambiguous.
 
-{{REQUIREMENT}}
+Requirement under test: {{REQUIREMENT}}
 
 Step 1: Internal Checklist (Do Not Show)
 > All terms have one reasonable interpretation.
@@ -46,7 +46,7 @@ Step 3 "Internal do not show":
 Step 4 "SHOW THIS ONLY AS YOUR OUTPUT": 
 Your final response should be in the following JSON format only: 
 {
- "decision": "PASS | FAIL",
+ "decision": "PASS | FLAG",
  "issues": "Single sentence describing the ambiguity if any; empty if PASS."
 }
 

@@ -3,17 +3,9 @@ from s3.agents.normalization import extract_json_block
 
 
 class DecisionAgent(BaseValidationAgent):
-    """
-    Validation Decision Agent (VDA) — S3
-
-    Internal phases:
-    1. Collect & aggregate agent results
-    2. Compute final decision (deterministic)
-    3. Generate advisory recommendations (LLM)
-    """
 
     def __init__(self, llm, prompt: str):
-        super().__init__(llm)
+        super().__init__(self.agent_llm)
         self.prompt = prompt
 
     # -------------------------------------------------

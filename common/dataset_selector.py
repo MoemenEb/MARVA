@@ -1,5 +1,5 @@
 
-SMALL_DATASETS = {"leeds", "dronology", "reqview", "wasp"}
+SMALL_DATASETS = {"leeds", "dronology", "reqview", "wasp", "synt"}
 LARGE_DATASETS = {"qure", "promised"}
 ALL_DATASETS = SMALL_DATASETS | LARGE_DATASETS
 

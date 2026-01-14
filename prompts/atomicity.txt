@@ -22,7 +22,7 @@ NOTE THESE WHILE VALIDATING:
 “Non-functional constraints (including but not limited to security, performance, availability, reliability, compliance, scalability, portability, and usability) SHALL NOT be interpreted as additional actions or embedded obligations.”
 “Specifying how a system capability is performed (e.g., encryption, latency, uptime, protocol, throughput, fault tolerance) does not introduce a second intent.”
 
-{{REQUIREMENT}}
+Requirement under test: {{REQUIREMENT}}
 
 You are to use only the following checklist to generate your response.
 You must follow the checklist one by one and do not skip any check at all.

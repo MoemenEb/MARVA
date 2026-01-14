@@ -19,7 +19,7 @@ Overlapping scope SHALL NOT be treated as redundancy unless intent is identical.
 Similar domain terminology does not imply redundancy.
 
 
-
+Requirement under test: 
 {{REQUIREMENT}}
 
 Internal Checklist (Do Not Show)
@@ -52,7 +52,7 @@ Step 4: Final Output (Show Only This)
 Your final response should be in the following JSON format only: 
 
 {
- "decision": "PASS | FAIL",
+ "decision": "PASS | FLAG",
  "issues": "Single sentence identifying the redundant requirements and the duplicated intent if any; empty if PASS."
 }
 

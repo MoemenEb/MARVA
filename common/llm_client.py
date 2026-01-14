@@ -14,7 +14,8 @@ class LLMClient:
             "model": self.model,
             "prompt": prompt,
             "temperature": self.temperature,
-            "stream": False
+            "stream": False,
+            "reset_session": True
         }
 
         start = time.time()

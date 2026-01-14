@@ -19,6 +19,7 @@ DATASETS = {
     "dronology": "dronology_raw.csv",
     "reqview": "reqview_raw.csv",
     "wasp": "wasp_raw.csv",
+    "synt": "syntatic_raw.csv"
 }
 
 # ----------------------------

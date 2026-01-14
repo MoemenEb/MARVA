@@ -1,14 +1,11 @@
 from s3.agents.base import BaseValidationAgent
 from s3.agents.normalization import extract_json_block
+from s3.agents.robuster import MajorityArbitrator
 
 
 class ConsistencyAgent(BaseValidationAgent):
-    """
-    Consistency Validation Agent (S3)
 
-    - Supports single and group modes
-    - Non-gated
-    """
+    RUNS = 3
 
     def __init__(self, llm, prompts: dict[str, str]):
         super().__init__(llm)
@@ -17,58 +14,57 @@ class ConsistencyAgent(BaseValidationAgent):
     def run(self, input_data: dict) -> dict:
         mode = input_data["mode"]
 
+        prompt, output_key = self._build_prompt(input_data, mode)
+        arbitration = self._execute_redundant(prompt)
+
+        return {
+            output_key: {
+                "agent": "consistency",
+                "mode": mode,
+                "decision": arbitration["final_decision"],
+                "confidence": arbitration["confidence"],
+                "issues": arbitration["issues"],
+                "raw_runs": arbitration["runs"],
+            }
+        }
+
+    # -------------------------------------------------
+    # Prompt construction only
+    # -------------------------------------------------
+    def _build_prompt(self, input_data: dict, mode: str) -> tuple[str, str]:
+
         if mode == "single":
-            return self._run_single(input_data)
+            text = input_data["requirement"]["text"]
+            prompt = self.prompts["single"].replace(
+                "{{REQUIREMENT}}", text
+            )
+            return prompt, "consistency_single"
 
         if mode == "group":
-            return self._run_group(input_data)
+            group = input_data["group"]
+            joined = "\n".join(
+                f"- {req['text']}" for req in group
+            )
+            prompt = self.prompts["group"].replace(
+                "{{REQUIREMENT}}", joined
+            )
+            return prompt, "consistency_group"
 
         raise ValueError(f"Unknown consistency mode: {mode}")
 
-    # -----------------------------
-    # Single-scope consistency
-    # -----------------------------
-    def _run_single(self, input_data: dict) -> dict:
-        text = input_data["requirement"]["text"]
+    # -------------------------------------------------
+    # Redundant execution + arbitration
+    # -------------------------------------------------
+    def _execute_redundant(self, prompt: str) -> dict:
+        runs = []
 
-        prompt = self.prompts["single"].replace(
-            "{{REQUIREMENT}}", text
-        )
+        for _ in range(self.RUNS):
+            raw = self.llm.generate(prompt)["text"]
+            result = extract_json_block(raw)
 
-        raw = self.llm.generate(prompt)["text"]
-        result = extract_json_block(raw)
-
-        return {
-            "consistency_single": {
-                "agent": "consistency",
-                "mode": "single",
+            runs.append({
                 "decision": result.get("decision", "FLAG"),
                 "issues": result.get("issues", []),
-            }
-        }
+            })
 
-    # -----------------------------
-    # Group-scope consistency
-    # -----------------------------
-    def _run_group(self, input_data: dict) -> dict:
-        group = input_data["group"]
-
-        joined = "\n".join(
-            f"- {req['text']}" for req in group
-        )
-
-        prompt = self.prompts["group"].replace(
-            "{{REQUIREMENT}}", joined
-        )
-
-        raw = self.llm.generate(prompt)["text"]
-        result = extract_json_block(raw)
-
-        return {
-            "consistency_group": {
-                "agent": "consistency",
-                "mode": "group",
-                "decision": result.get("decision", "FLAG"),
-                "issues": result.get("issues", []),
-            }
-        }
+        return MajorityArbitrator.arbitrate(runs)
