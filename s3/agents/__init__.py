@@ -14,10 +14,11 @@ def build_stub_agents():
     # -------------------------------------------------
     # Single shared LLM for all agents
     # -------------------------------------------------
-    llm = LLMClient(
-        host="http://localhost:11434",
-        model="qwen3:1.7b",
-        temperature=0.0,
+    def create_agent_llm():
+        return LLMClient(
+            host="http://localhost:11434",
+            model="qwen3:1.7b",
+            temperature=0.0,
         )
     #gemma3n:e2b
     #gemma3:4b
@@ -53,13 +54,13 @@ def build_stub_agents():
 
     return {
         # REAL agent
-        "atomicity": AtomicityAgent(llm=llm, prompts=atomicity_prompts),
-        "clarity": ClarityAgent(llm=llm, prompt=clarity_prompt),
-        "completion_single": CompletionAgent(llm=llm, prompts=completion_prompts),
-        "completion_group": CompletionAgent(llm=llm, prompts=completion_prompts),
-        "consistency_single": ConsistencyAgent(llm=llm, prompts=consistency_prompts),
-        "consistency_group": ConsistencyAgent(llm=llm, prompts=consistency_prompts),
-        "redundancy": RedundancyAgent(llm=llm, prompt=redundancy_prompt),
-        "decision": DecisionAgent(llm=llm, prompt=vda_prompt),
+        "atomicity": AtomicityAgent(llm=create_agent_llm(), prompts=atomicity_prompts),
+        "clarity": ClarityAgent(llm=create_agent_llm(), prompt=clarity_prompt),
+        "completion_single": CompletionAgent(llm=create_agent_llm(), prompts=completion_prompts),
+        "completion_group": CompletionAgent(llm=create_agent_llm(), prompts=completion_prompts),
+        "consistency_single": ConsistencyAgent(llm=create_agent_llm(), prompts=consistency_prompts),
+        "consistency_group": ConsistencyAgent(llm=create_agent_llm(), prompts=consistency_prompts),
+        "redundancy": RedundancyAgent(llm=create_agent_llm(), prompt=redundancy_prompt),
+        "decision": DecisionAgent(llm=create_agent_llm(), prompt=vda_prompt),
 
     }

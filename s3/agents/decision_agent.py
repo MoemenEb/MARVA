@@ -5,7 +5,7 @@ from s3.agents.normalization import extract_json_block
 class DecisionAgent(BaseValidationAgent):
 
     def __init__(self, llm, prompt: str):
-        super().__init__(self.agent_llm)
+        super().__init__(llm)
         self.prompt = prompt
 
     # -------------------------------------------------
