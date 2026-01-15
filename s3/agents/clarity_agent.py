@@ -3,7 +3,7 @@ from s3.agents.normalization import extract_json_block
 from s3.agents.robuster import MajorityArbitrator
 
 class ClarityAgent(BaseValidationAgent):
-    RUNS = 3
+    RUNS = 1
   
     def __init__(self, llm, prompt: str):
         super().__init__(llm)

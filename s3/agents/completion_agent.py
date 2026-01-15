@@ -5,7 +5,7 @@ from s3.agents.robuster import MajorityArbitrator
 
 class CompletionAgent(BaseValidationAgent):
 
-    RUNS = 3
+    RUNS = 1
   
     def __init__(self, llm, prompts: dict[str, str]):
         super().__init__(llm)

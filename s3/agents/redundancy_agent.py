@@ -4,14 +4,8 @@ from s3.agents.robuster import MajorityArbitrator
 
 
 class RedundancyAgent(BaseValidationAgent):
-    """
-    Redundancy Validation Agent (S3)
 
-    - Group-scope only
-    - Non-gated
-    """
-
-    RUNS = 3
+    RUNS = 1
 
     def __init__(self, llm, prompt: str):
         super().__init__(llm)
