@@ -5,7 +5,7 @@ from pathlib import Path
 import time
 
 from common.dataset_selector import filter_requirements
-from s2.grouping import group_requirements
+from common.grouping import group_requirements
 
 from s3.graph import build_marva_s3_graph
 from s3.agents import build_stub_agents

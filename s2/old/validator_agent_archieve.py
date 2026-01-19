@@ -44,6 +44,7 @@ class S2ValidatorAgent:
             )
             # print(f"Prompt for {key}:\n{prompt}\n")
             response = self.llm.generate(prompt)
+            
             json_result = extract_json_block(response["text"])
 
             results[key] = {
