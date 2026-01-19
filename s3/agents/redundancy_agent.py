@@ -15,16 +15,16 @@ class RedundancyAgent(BaseValidationAgent):
         group = input_data["group"]
 
         prompt = self._build_prompt(group)
-        arbitration = self._execute_redundant(prompt)
+        raw = self.llm.generate(prompt)["text"]
+        result = extract_json_block(raw)
+        # arbitration = self._execute_redundant(prompt)
 
         return {
             "redundancy": {
                 "agent": "redundancy",
                 "mode": "group",
-                "decision": arbitration["final_decision"],
-                "confidence": arbitration["confidence"],
-                "issues": arbitration["issues"],
-                "raw_runs": arbitration["runs"],
+                "decision": result["decision"],
+                "issues": result.get("issues", []),
             }
         }
 

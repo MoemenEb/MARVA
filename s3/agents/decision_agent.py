@@ -33,7 +33,6 @@ class DecisionAgent(BaseValidationAgent):
     # -------------------------------------------------
     def _collect_results(self, state: dict, mode: str) -> dict:
         results = {}
-
         if mode == "single":
             if "atomicity" in state:
                 results["atomicity"] = state["atomicity"]["decision"]
@@ -41,14 +40,12 @@ class DecisionAgent(BaseValidationAgent):
             if state.get("atomicity", {}).get("decision") != "FAIL":
                 for key in ["clarity", "completion_single", "consistency_single"]:
                     if key in state:
-                        name = key.replace("_single", "")
-                        results[name] = state[key]["decision"]
+                        results[key] = state[key]["decision"]
 
         elif mode == "group":
             for key in ["redundancy", "completion_group", "consistency_group"]:
                 if key in state:
-                    name = key.replace("_group", "")
-                    results[name] = state[key]["decision"]
+                    results[key] = state[key]["decision"]
 
         else:
             raise ValueError(f"Unknown mode: {mode}")
@@ -94,7 +91,6 @@ class DecisionAgent(BaseValidationAgent):
     # -------------------------------------------------
     def _collect_issues(self, state: dict) -> str:
         lines = []
-
         for key, value in state.items():
             if isinstance(value, dict) and value.get("issues"):
                 lines.append(f"{key}: {value['issues']}")

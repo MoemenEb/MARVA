@@ -33,7 +33,7 @@ def build_stub_agents():
     # -------------------------------------------------
     atomicity_prompts = {
         "initial": open("./prompts/atomicity.txt").read(),
-        "reflection": open("./prompts/atomicity.txt").read(),
+        "reflection": open("./prompts/s3_reflections/ref_atomic.txt").read(),
     }
     clarity_prompt = open("./prompts/clarity.txt").read()
 

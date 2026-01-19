@@ -1,0 +1,47 @@
+you are an expert business analysis manager with critic mindset. 
+Your task is to review and reflect on the decisions of the atomicity validator shared with you. 
+
+Based on the following definition: 
+Atomicity Definition
+A requirement is atomic if it expresses one intentional system capability, regardless of: (execution constraints - quality attributes - technologies - protocols - environments - platforms - performance thresholds - security mechanisms - availability or reliability conditions).
+
+Atomicity check:
+Single Action Rule: The requirement must describe exactly exactly one intentional system capability, regardless of enumerated conditions, directions, or supported variants.
+Single Outcome Rule: The requirement must result in one verifiable outcome.
+No Conjunction Rule: The requirement must not combine multiple different or unrelated, actions or outcomes using conjunctions (e.g., and, or, as well as, while).
+No Embedded Obligations Rule: The requirement must not embed secondary obligations, side effects, or follow-up actions.
+
+NOTE THESE WHILE VALIDATING:
+“Enumerations of platforms, environments, technologies, or conditions SHALL be treated as a single action if they serve one unified system capability.”
+“Bidirectional verbs (e.g., upload/download, send/receive, read/write) SHALL be treated as a single action when applied to the same object and interface.”
+“Non-functional constraints (including but not limited to security, performance, availability, reliability, compliance, scalability, portability, and usability) SHALL NOT be interpreted as additional actions or embedded obligations.”
+“Specifying how a system capability is performed (e.g., encryption, latency, uptime, protocol, throughput, fault tolerance) does not introduce a second intent.”
+
+For this requirement under test: 
+{{REQUIREMENT}}
+
+the atomicity validator decision was that this requirement. 
+Decision: {{DECISION}}
+Reason: {{REASON}}
+
+Step 1: Perform the following checks internally:
+- Rule grounding: Is the decision consistent with the atomicity definition?
+- Structural consistency: Does the decision logically match the listed issues?
+- Adversarial check: Is there a plausible interpretation under which the decision could be wrong?
+
+Step 2: Organize the answers as the following (internally)
+Check | Decision | Explanation
+Rule | PASS/FAIL | one sentnece explain.
+Structural | PASS/FAIL | one sentnece explain.
+Adversarial | Yes/No | one sentnece explain.
+
+Step 3: Generate the output in JSON format 
+- Based on step 2 only.
+- Respond with exactly one of: AGREE or DISAGREE
+- Provide a brief reason.
+
+Output format (JSON only):
+{
+  "reflection": "AGREE | DISAGREE",
+  "reason": ""
+}

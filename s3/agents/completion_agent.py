@@ -15,16 +15,15 @@ class CompletionAgent(BaseValidationAgent):
         mode = input_data["mode"]
 
         prompt, output_key = self._build_prompt(input_data, mode)
-        arbitration = self._execute_redundant(prompt)
+        raw = self.llm.generate(prompt)["text"]
+        result = extract_json_block(raw)
+        # arbitration = self._execute_redundant(prompt)
 
         return {
-            output_key: {
+            "completion_"+mode: {
                 "agent": "completion",
-                "mode": mode,
-                "decision": arbitration["final_decision"],
-                "confidence": arbitration["confidence"],
-                "issues": arbitration["issues"],
-                "raw_runs": arbitration["runs"],
+                "decision": result["decision"],
+                "issues": result.get("issues", []),
             }
         }
 
