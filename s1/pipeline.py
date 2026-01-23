@@ -1,5 +1,6 @@
 from common.llm_client import LLMClient
 from common.prompt_loader import load_prompt
+import logging
 
 
 class S1Pipeline:
@@ -13,25 +14,27 @@ class S1Pipeline:
         self.llm = llm
         self.single_prompt = load_prompt(single_prompt_name)
         self.group_prompt = load_prompt(group_prompt_name)
+        self.logger = logging.getLogger("marva.s1.pipeline")
+
 
     def run_single(self, requirement: dict) -> dict:
+        self.logger.info(f"Running S1 single for requirement ID: {requirement.id}")
         prompt = self.single_prompt.replace(
-            "{{REQUIREMENT}}", requirement["text"]
+            "{{REQUIREMENT}}", requirement.text
         )
 
         response = self.llm.generate(prompt)
 
         return {
             "mode": "single",
-            "req_id": requirement["req_id"],
-            "source": requirement["source"],
+            "req_id": requirement.id,
             "llm_output": response["text"],
             "latency_ms": response["latency_ms"],
         }
 
     def run_group(self, requirements: list[dict]) -> dict:
         joined_reqs = "\n".join(
-            f"[{r['req_id']}] {r['text']}" for r in requirements
+            f"[{r.id}] {r.text}" for r in requirements
         )
 
         prompt = self.group_prompt.replace(
@@ -42,8 +45,7 @@ class S1Pipeline:
 
         return {
             "mode": "group",
-            "req_ids": [r["req_id"] for r in requirements],
-            "sources": list({r["source"] for r in requirements}),
+            "req_ids": [r.id for r in requirements],
             "llm_output": response["text"],
             "latency_ms": response["latency_ms"],
         }

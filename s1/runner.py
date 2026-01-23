@@ -2,29 +2,49 @@ from datetime import datetime
 import json
 import argparse
 import time
+import logging
 from pathlib import Path
 
 from common.llm_client import LLMClient
-from common.dataset_selector import filter_requirements
+# from common.dataset_selector import filter_requirements
 from common.normalization import extract_json_block
 from s1.pipeline import S1Pipeline
+from utils.reader.reader import Reader
+from entity.requirement_set import RequirementSet
+from common.logging.setup import setup_logging
+from s1.logger import init_s1_logger
 
-DATA_PATH = Path("data/processed/requirements.json")
+# DATA_PATH = Path("data/processed/requirements.json")
 DECISON_OUTPUT_PATH = Path("out/s1_decisions/")
+RAW_DATA_PATH = Path("data/raw/")
 
+def bootstrap_logging():
+    setup_logging(run_id="s1_cli_run")
+    init_s1_logger()
 
 
 
 def main(mode: str, scope: str, limit: int | None):
-    OUT_DIR = Path("s1/outputs/{scope}/{mode}")
+    bootstrap_logging()
+    logger = logging.getLogger("marva.s1.runner")
+    logger.info(f"Starting S1 runner with mode={mode}, scope={scope}, limit={limit}")
+
+    OUT_DIR = Path(f"s1/outputs/{mode}")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    with open(DATA_PATH, encoding="utf-8") as f:
-        requirements = json.load(f)
-
-    requirements = filter_requirements(requirements, scope)
-
+    
+    DATA_PATH = RAW_DATA_PATH / f"{scope}"
+    reader = Reader.get_reader(DATA_PATH)
+    requirements_set = reader.read(DATA_PATH)
     if limit:
-        requirements = requirements[:limit]
+        requirements = requirements_set[:limit]
+    requirementSet = RequirementSet(requirements)
+
+    # with open(DATA_PATH, encoding="utf-8") as f:
+    #     requirements = json.load(f)
+    # requirements = filter_requirements(requirements, scope)
+
+    # if limit:
+    #     requirements = requirements[:limit]
 
     llm = LLMClient(
         host="http://localhost:11434",
@@ -55,10 +75,10 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     if mode == "single":
         
-        for req in requirements:
+        for req in requirementSet.requirements:
             validation_summary = {
-                "requirement_id": req["req_id"],
-                "requirement_text": req["text"],
+                "requirement_id": req.id,
+                "requirement_text": req.text,
             }
             
             result = pipeline.run_single(req)
@@ -78,17 +98,16 @@ def main(mode: str, scope: str, limit: int | None):
 
             decision_summary["validation_decision"].append(validation_summary)
 
-            out_file = OUT_DIR / f"{req['req_id']}.json"
+            out_file = OUT_DIR / f"{req.id}.json"
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
-            print(f"[S1|single] {req['req_id']} done")
-
+            print(f"[S1|single] {req.id} done")
     # -----------------------------
     # GROUP SCOPE
     # -----------------------------
     elif mode == "group":
-        result = pipeline.run_group(requirements)
+        result = pipeline.run_group(requirementSet.requirements)
         json_result = extract_json_block(result["llm_output"])
         by_agent = {
                 a["dimension"]: a["status"]
@@ -98,8 +117,8 @@ def main(mode: str, scope: str, limit: int | None):
         json_result.pop("agent", None)
         json_result["by_agent"] = by_agent
         validation_summary = {
-            "requirement_id": [r["req_id"] for r in requirements],
-            "requirement_text": [r["text"] for r in requirements],
+            "requirement_id": [r.id for r in requirementSet.requirements],
+            "requirement_text": [r.text for r in requirementSet.requirements],
             **json_result,
         }
         decision_summary["validation_decision"].append(validation_summary)
@@ -124,7 +143,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--scope",
         required=True,
-        help="Execution mode: small | large | all | dataset name",
+        help="dataset name",
     )
     parser.add_argument(
         "--limit",

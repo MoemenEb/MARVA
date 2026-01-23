@@ -1,5 +1,6 @@
 from common.normalization import extract_json_block
 from common.prompt_loader import load_prompt
+import logging
 
 class ValidatorSummary:
     """Handles summarization of validation results."""
@@ -7,6 +8,7 @@ class ValidatorSummary:
     def __init__(self, llm):
         self.llm = llm
         self.summary_prompt = load_prompt("s2_vdp")
+        self.logger = logging.getLogger("marva.s2.validation_summary")
 
     def summarize(self, validation_results: dict, requirement) -> dict:
         """Generate a summary of validation results."""

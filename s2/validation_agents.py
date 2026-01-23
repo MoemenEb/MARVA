@@ -1,3 +1,4 @@
+import logging
 from common.normalization import extract_json_block
 from common.prompt_loader import load_prompt
 
@@ -18,6 +19,8 @@ class ValidatorAgent:
             "consistency_group": load_prompt("consistency_group"),
             "redundancy": load_prompt("redundancy"),
         }
+        self.logger = logging.getLogger("marva.s2.pipeline")
+
 
     def run(self, prompt_key: str, content: str) -> dict:
         """Execute validation using specified prompt and content."""
@@ -29,23 +32,25 @@ class ValidatorAgent:
             "latency_ms": response["latency_ms"],
         }
 
-    def validate_single(self, requirement: dict) -> dict:
+    def validate_single(self, requirement) -> dict:
         """Validate a single requirement across multiple criteria."""
+        self.logger.info(f"Validating single requirement: {requirement.id}")
+        self.logger.debug(f"Requirement text: {requirement.text}")
         return {
-            key: self.run(key, requirement["text"])
-            for key in ["atomicity", "clarity", "completion_single", "consistency_single"]
+            key: self.run(key, requirement.text)
+            for key in ["atomicity", "clarity", "completion_single"]
         }
 
-    def validate_group(self, group: list[dict]) -> dict:
+    def validate_group(self, group) -> dict:
         """Validate a group of requirements for completion, consistency, and redundancy."""
-        group_text = "\n".join(f"- {req['text']}" for req in group)
+        group_text = "\n".join(f"- {req.text}" for req in group.requirements)
         
         return {
             key: self.run(key, group_text)
             for key in ["completion_group", "consistency_group", "redundancy"]
         }
     
-    def execute(self, mode: str, requirement: dict = None, group: list[dict] = None) -> dict:
+    def execute(self, mode: str, requirement = None, group = None) -> dict:
         """Execute validation based on mode."""
         if mode == "single" and requirement is not None:
             return self.validate_single(requirement)

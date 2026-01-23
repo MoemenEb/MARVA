@@ -1,16 +1,22 @@
 from datetime import datetime
 import json
 import argparse
+import logging
 from pathlib import Path
 
 from common.dataset_selector import filter_requirements
 from common.llm_client import LLMClient
 from common.grouping import group_requirements
+from common.logging.setup import setup_logging
 from s2.validation_agents import ValidatorAgent
 from s2.validation_summary import ValidatorSummary
+from utils.reader.reader import Reader
+from entity.requirement_set import RequirementSet
+from s2.logger import init_s2_logger
 
 DATA_PATH = Path("data/processed/requirements_grouped.json")
 DECISION_OUTPUT_PATH = Path("out/s2_decisions/")
+RAW_DATA_PATH = Path("data/raw/")
 
 
 def calculate_total_latency(results: dict) -> int:
@@ -23,10 +29,11 @@ def process_validation(validator: ValidatorAgent, summarizer: ValidatorSummary,
     """Execute validation and summary for single requirement or group."""
     is_single = mode == "single"
     
+    
     # Execute validation
     validation_results = validator.execute(
         mode=mode,
-        requirement=item if is_single else None,
+        requirement=item.requirements if is_single else None,
         group=item if not is_single else None
     )
     summary = summarizer.summarize(validation_results, item)
@@ -97,21 +104,31 @@ def save_json(path: Path, data: dict):
 
 def main(mode: str, scope: str, limit: int | None):
     # Load and filter dataset
-    with open(DATA_PATH, encoding="utf-8") as f:
-        requirements = json.load(f)
+    # with open(DATA_PATH, encoding="utf-8") as f:
+    #     requirements = json.load(f)
     
-    requirements = filter_requirements(requirements, scope)[:limit] if limit else filter_requirements(requirements, scope)
-    
-    print(f"[S2] mode={mode}, scope={scope}, count={len(requirements)}")
+    # requirements = filter_requirements(requirements, scope)[:limit] if limit else filter_requirements(requirements, scope)
+    setup_logging(run_id="s2_run_"+datetime.now().strftime('%Y%m%d'))
+    init_s2_logger()
+    logger = logging.getLogger("marva.s2.runner")
+
+    DATA_PATH = RAW_DATA_PATH / f"{scope}"
+    reader = Reader.get_reader(DATA_PATH)
+    requirements_set = reader.read(DATA_PATH)
+    if limit:
+        requirements = requirements_set[:limit]
+    requirementSet = RequirementSet(requirements)
+    logger.info(f"Starting S2 runner with mode={mode}, scope={scope}, limit={limit}")
+    # print(f"[S2] mode={mode}, scope={scope}, count={len(requirements)}")
 
     # Setup
-    groups = group_requirements(requirements)
+    # groups = group_requirements(requirements)
     llm = LLMClient(host="http://localhost:11434", model="qwen3:1.7b")
     validator = ValidatorAgent(llm)
     summarizer = ValidatorSummary(llm)
 
     # Create output directories
-    out_dir = Path(f"s2/outputs/{scope}/{mode}")
+    out_dir = Path(f"s2/outputs/{mode}")
     out_dir.mkdir(parents=True, exist_ok=True)
     
     decision_out_dir = DECISION_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -127,25 +144,21 @@ def main(mode: str, scope: str, limit: int | None):
     }
 
     # Process items
-    items = [g for g in groups.items() if g[0] is not None] if mode == "group" else requirements
+    # items = requirementSet if mode == "group" else requirementSet.requirements
     total_latency = 0
     
-    for item in items:
-        if mode == "group":
-            item = item[1]  # Extract group_reqs from tuple
-        
-        result, decision, item_id, flow_latency = process_validation(
-            validator, summarizer, mode, item
+    result, decision, item_id, flow_latency = process_validation(
+            validator, summarizer, mode, requirementSet
         )
         
-        total_latency += flow_latency
-        final_decision["Validation Decisions"].append(decision)
+    total_latency += flow_latency
+    final_decision["Validation Decisions"].append(decision)
         
-        # Save individual result
-        filename = f"group_{item_id}.json" if mode == "group" else f"{item_id}.json"
-        save_json(out_dir / filename, result)
-        
-        print(f"[S2-{mode}] {item_id} done")
+    # Save individual result
+    filename = f"group_{item_id}.json" if mode == "group" else f"{item_id}.json"
+    save_json(out_dir / filename, result)
+    
+    print(f"[S2-{mode}] {item_id} done")
     
     # Save final decision summary
     final_decision["total_flow_latency_seconds"] = total_latency
