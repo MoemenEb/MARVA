@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 from common.llm_client import LLMClient
-from common.normalization import extract_json_block
+from utils.normalization import extract_json_block
 from s1.pipeline import S1Pipeline
 from utils.reader.reader import Reader
 from entity.requirement_set import RequirementSet

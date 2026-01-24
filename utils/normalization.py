@@ -15,7 +15,9 @@ def extract_json_block(text: str) -> dict:
         pass
 
     # Regex to extract JSON object
-    match = re.search(r"\{.*\}", text, re.DOTALL)
+    # match = re.search(r"\{.*\}", text, re.DOTALL)
+    match = re.search(r"(?:```json\s*)?(\{.*?\})(?:\s*```)?", text, re.DOTALL)
+
     if not match:
         print("No JSON block found.")
         return {

@@ -1,5 +1,5 @@
 from s3.agents.base import BaseValidationAgent
-from s3.agents.normalization import extract_json_block
+from utils.normalization import extract_json_block
 
 class AtomicityAgent(BaseValidationAgent):
 

@@ -1,6 +1,5 @@
 from s3.agents.base import BaseValidationAgent
-from s3.agents.normalization import extract_json_block
-from s3.agents.robuster import MajorityArbitrator
+from utils.normalization import extract_json_block
 
 
 class ConsistencyAgent(BaseValidationAgent):

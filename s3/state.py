@@ -7,11 +7,6 @@ def replace(_, new):
     return new
 
 
-# class Requirement(TypedDict):
-#     req_id: str
-#     text: str
-
-
 class MARVAState(TypedDict, total=False):
     """
     Explicit LangGraph state for MARVA S3.

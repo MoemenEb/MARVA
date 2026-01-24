@@ -1,5 +1,5 @@
 import logging
-from common.normalization import extract_json_block
+from utils.normalization import extract_json_block
 from common.prompt_loader import load_prompt
 
 
