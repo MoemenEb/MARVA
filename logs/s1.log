@@ -1,2 +1,0 @@
-2026-01-22 11:34:21,330 | INFO     | S1 | marva.s1.runner | Starting S1 runner with mode=single, scope=reqview_raw.csv, limit=1
-2026-01-22 11:34:21,332 | INFO     | S1 | marva.s1.pipeline | Running S1 single for requirement ID: reqView-01
