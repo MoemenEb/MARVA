@@ -1,42 +1,30 @@
 from datetime import datetime
-import json
 import argparse
 import time
 import logging
 from pathlib import Path
+from utils.dataset_loader import load_dataset
+from utils.save_runner_decision import save_runner_decision
 
 from common.llm_client import LLMClient
-from utils.normalization import extract_json_block
 from s1.pipeline import S1Pipeline
-from utils.reader.reader import Reader
-from entity.requirement_set import RequirementSet
 from common.logging.setup import setup_logging
 from s1.logger import init_s1_logger
 
 DECISON_OUTPUT_PATH = Path("out/s1_decisions/")
-RAW_DATA_PATH = Path("data/raw/")
-
-def bootstrap_logging():
-    setup_logging(run_id="s1_cli_run")
-    init_s1_logger()
+LOGGER = "marva.s1.runner"
 
 
 
 def main(mode: str, scope: str, limit: int | None):
-    bootstrap_logging()
-    logger = logging.getLogger("marva.s1.runner")
+    setup_logging(run_id="s1_run_"+datetime.now().strftime('%Y%m%d'))
+    init_s1_logger()
+    logger = logging.getLogger(LOGGER)
     logger.info(f"Starting S1 runner with mode={mode}, scope={scope}, limit={limit}")
-
-    OUT_DIR = Path(f"s1/outputs/{mode}")
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
     
-    DATA_PATH = RAW_DATA_PATH / f"{scope}"
-    reader = Reader.get_reader(DATA_PATH)
-    requirements_set = reader.read(DATA_PATH)
-    if limit:
-        requirements = requirements_set[:limit]
-    requirementSet = RequirementSet(requirements)
-
+    logger.info(f"Loading dataset {scope}")
+    requirement_set = load_dataset(scope, limit)
+    logger.info(f"Loaded {len(requirement_set.requirements)} requirements from dataset")
 
     llm = LLMClient(
         host="http://localhost:11434",
@@ -59,77 +47,50 @@ def main(mode: str, scope: str, limit: int | None):
         "flow_latency_seconds" : 0,
         "validation_decision": [],
     }
-    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-    decision_out_dir.mkdir(parents=True, exist_ok=True)
+
     startTime = time.perf_counter()
     # -----------------------------
     # SINGLE SCOPE
     # -----------------------------
     if mode == "single":
-        
-        for req in requirementSet.requirements:
-            validation_summary = {
-                "requirement_id": req.id,
-                "requirement_text": req.text,
-            }
-            
-            result = pipeline.run_single(req)
-            json_result = extract_json_block(result["llm_output"])
-            by_agent = {
-                a["dimension"]: a["status"]
-                for a in json_result["agents"]
-            }
-            json_result.pop("agents", None)
-            json_result.pop("agent", None)
-            json_result["by_agent"] = by_agent
+        for req in requirement_set.requirements:    
+            json_result = pipeline.execute(req, mode)
 
-            validation_summary = {
-                **validation_summary,
+            summary = {
+                "requirements": {
+                    req.id: req.text
+                },
                 **json_result,
             }
-
-            decision_summary["validation_decision"].append(validation_summary)
-
-            out_file = OUT_DIR / f"{req.id}.json"
-            with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
-
-            print(f"[S1|single] {req.id} done")
+            logger.debug(f"Validation summary for requirement ID {req.id}: {summary}")
+            logger.info(f"[S1|single] {req.id} done")
+            decision_summary["validation_decision"].append(summary)
     # -----------------------------
     # GROUP SCOPE
     # -----------------------------
     elif mode == "group":
-        result = pipeline.run_group(requirementSet.requirements)
-        json_result = extract_json_block(result["llm_output"])
-        by_agent = {
-                a["dimension"]: a["status"]
-                for a in json_result["agents"]
-            }
-        json_result.pop("agents", None)
-        json_result.pop("agent", None)
-        json_result["by_agent"] = by_agent
-        validation_summary = {
-            "requirement_id": [r.id for r in requirementSet.requirements],
-            "requirement_text": [r.text for r in requirementSet.requirements],
+        json_result = pipeline.execute(requirement_set.requirements, mode)
+        summary = {
+            "requirements": {
+                r.id: r.text
+                for r in requirement_set.requirements
+            },
             **json_result,
         }
-        decision_summary["validation_decision"].append(validation_summary)
-
-        out_file = OUT_DIR / "s1_group.json"
-        with open(out_file, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
-
-        print("[S1|group] group analysis done")
-
+        logger.debug(f"Validation summary for group: {summary}")
+        logger.info("[S1|group] group analysis done")
+        decision_summary["validation_decision"].append(summary)
     else:
         raise ValueError(f"Invalid scope: {scope}")
 
     endTime = time.perf_counter()
     flowlatency = int((endTime - startTime))
+    logger.info(f"S1 runner completed in {flowlatency} seconds")
     decision_summary["flow_latency_seconds"] = flowlatency
-    with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-        json.dump(decision_summary, f, indent=2, ensure_ascii=False)
-        
+    
+    save_runner_decision(decision_summary, DECISON_OUTPUT_PATH)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
