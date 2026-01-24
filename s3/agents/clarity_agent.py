@@ -1,6 +1,5 @@
 from s3.agents.base import BaseValidationAgent
 from s3.agents.normalization import extract_json_block
-from s3.agents.robuster import MajorityArbitrator
 
 class ClarityAgent(BaseValidationAgent):
   
@@ -9,7 +8,7 @@ class ClarityAgent(BaseValidationAgent):
         self.prompt = prompt
 
     def run(self, input_data: dict) -> dict:
-        requirement_text = input_data["requirement"]["text"]
+        requirement_text = input_data["requirement"].text
         filled_prompt = self.prompt.replace(
             "{{REQUIREMENT}}", requirement_text
         )

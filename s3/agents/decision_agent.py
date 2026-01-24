@@ -99,8 +99,8 @@ class DecisionAgent(BaseValidationAgent):
 
     def _format_requirements(self, state: dict, mode: str) -> str:
         if mode == "single":
-            return state["requirement"]["text"]
+            return state["requirement"].text
 
         return "\n".join(
-            f"- {req['text']}" for req in state["group"]
+            f"- {req.text}" for req in state["group"]
         )

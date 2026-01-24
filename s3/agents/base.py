@@ -4,7 +4,7 @@ class BaseValidationAgent:
         self.llm = llm
         self.role = self.__class__.__name__
 
-    def run(self, input_data: dict) -> dict:
+    def run(self, input_data) -> dict:
         """
         Each agent must implement its own reasoning logic.
 

@@ -1,6 +1,5 @@
 from s3.agents.base import BaseValidationAgent
 from s3.agents.normalization import extract_json_block
-from s3.agents.robuster import MajorityArbitrator
 
 class AtomicityAgent(BaseValidationAgent):
 
@@ -8,9 +7,8 @@ class AtomicityAgent(BaseValidationAgent):
         super().__init__(llm)
         self.prompts = prompts
 
-    def run(self, input_data: dict) -> dict:
-
-        requirement_text = input_data["requirement"]["text"]
+    def run(self, input_data) -> dict:
+        requirement_text = input_data["requirement"].text
         # -------------------------------------------------
         # Step 1 — Initial judgment
         # -------------------------------------------------

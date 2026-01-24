@@ -4,12 +4,9 @@ import argparse
 from pathlib import Path
 import time
 
-from common.dataset_selector import filter_requirements
-from common.grouping import group_requirements
 
 from s3.graph import build_marva_s3_graph
 from s3.agents import build_stub_agents
-
 from utils.reader.reader import Reader
 from entity.requirement_set import RequirementSet
 
@@ -27,16 +24,8 @@ def main(mode: str, scope: str, limit: int | None):
     """
 
     # -----------------------------
-    # Load dataset (IDENTICAL to S2)
+    # Load dataset
     # -----------------------------
-    # with open(DATA_PATH, encoding="utf-8") as f:
-    #     requirements = json.load(f)
-
-    # requirements = filter_requirements(requirements, scope)
-
-    # if limit is not None:
-    #     requirements = requirements[:limit]
-
     DATA_PATH = RAW_DATA_PATH / f"{scope}"
     reader = Reader.get_reader(DATA_PATH)
     requirements_set = reader.read(DATA_PATH)
@@ -46,13 +35,9 @@ def main(mode: str, scope: str, limit: int | None):
 
     print(f"[S3] mode={mode}, scope={scope}, count={len(requirements)}")
 
+   
     # -----------------------------
-    # Grouping (IDENTICAL to S2)
-    # -----------------------------
-    groups = group_requirements(requirements)
-
-    # -----------------------------
-    # Init agents + graph (S3-specific)
+    # Init agents + graph
     # -----------------------------
     agents = build_stub_agents()
     graph = build_marva_s3_graph(agents)
@@ -81,14 +66,13 @@ def main(mode: str, scope: str, limit: int | None):
         }
         for req in requirementSet.requirements:
             out_file = out_dir / f"{req.id}.json"
-            # if out_file.exists():
-            #     continue
 
             state = {
                 "mode": "single",
                 "requirement": req,
             }
             result = app.invoke(state)
+            result.pop("requirement")
             decision = result["decision"]
 
             full = {
@@ -113,52 +97,44 @@ def main(mode: str, scope: str, limit: int | None):
             json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
     elif mode == "group":
+        reqi = {"requirements": []}
+        out_file = out_dir / f"group_run{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         startTime = time.perf_counter()
-        for group_id, group_reqs in groups.items():
-            if group_id is None:
-                continue  # same behavior as S2
-
-            out_file = out_dir / f"group_{group_id}_run{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-
-            state = {
+        state = {
                 "mode": "group",
-                "group": group_reqs,
+                "group": requirementSet.requirements,
             }
-
-            reqi = {"requirements": []}
-
-            for req in group_reqs:
-                req_ids = req.get('req_id', 'unknown')
-                req_texts = req.get('text', 'unknown')
-                requir = {
-                    'req_id': req_ids,
-                    'text': req_texts
+        for r in requirementSet.requirements:
+            requir = {
+                    'req_id': r.id,
+                    'text': r.text
                 }
-                reqi["requirements"].append(requir)
+            reqi["requirements"].append(requir)
                 
 
-            result = app.invoke(state)
-            decision = result["decision"]
+        result = app.invoke(state)
+        result.pop("group")
+        decision = result["decision"]
 
-            full = {
-                "group_id": group_id,
-                **reqi,
-                **decision
-            }
-            endTime = time.perf_counter()
-            flowlatency = int((endTime - startTime))
-            decision_summary["flow_latency_seconds"] = flowlatency
-            final_decision = {
-            **decision_summary,
-            **full,
-            }
-            with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-                json.dump(final_decision, f, indent=2, ensure_ascii=False)
+        full = {
+            "scope": scope,
+            **reqi,
+            **decision
+        }
+        endTime = time.perf_counter()
+        flowlatency = int((endTime - startTime))
+        decision_summary["flow_latency_seconds"] = flowlatency
+        final_decision = {
+        **decision_summary,
+        **full,
+        }
+        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+            json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
-            with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
+        with open(out_file, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
 
-            print(f"[S3-group] {group_id} done")
+        print(f"[S3-group] done")
 
 
 if __name__ == "__main__":

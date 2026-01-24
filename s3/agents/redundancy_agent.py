@@ -1,12 +1,8 @@
 from s3.agents.base import BaseValidationAgent
 from s3.agents.normalization import extract_json_block
-from s3.agents.robuster import MajorityArbitrator
 
 
 class RedundancyAgent(BaseValidationAgent):
-
-    RUNS = 1
-
     def __init__(self, llm, prompt: str):
         super().__init__(llm)
         self.prompt = prompt
@@ -17,7 +13,6 @@ class RedundancyAgent(BaseValidationAgent):
         prompt = self._build_prompt(group)
         raw = self.llm.generate(prompt)["text"]
         result = extract_json_block(raw)
-        # arbitration = self._execute_redundant(prompt)
 
         return {
             "redundancy": {
@@ -33,26 +28,9 @@ class RedundancyAgent(BaseValidationAgent):
     # -------------------------------------------------
     def _build_prompt(self, group: list[dict]) -> str:
         joined = "\n".join(
-            f"- {req['text']}" for req in group
+            f"- {req.text}" for req in group
         )
 
         return self.prompt.replace(
             "{{REQUIREMENT}}", joined
         )
-
-    # -------------------------------------------------
-    # Redundant execution + arbitration
-    # -------------------------------------------------
-    def _execute_redundant(self, prompt: str) -> dict:
-        runs = []
-
-        for _ in range(self.RUNS):
-            raw = self.llm.generate(prompt)["text"]
-            result = extract_json_block(raw)
-
-            runs.append({
-                "decision": result.get("decision", "FLAG"),
-                "issues": result.get("issues", []),
-            })
-
-        return MajorityArbitrator.arbitrate(runs)

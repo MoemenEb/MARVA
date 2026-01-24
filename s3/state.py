@@ -1,17 +1,15 @@
 from typing import TypedDict, Dict, Any, List
 from typing_extensions import Annotated
+from entity.requirement import Requirement
 
 
 def replace(_, new):
     return new
 
 
-class Requirement(TypedDict):
-    req_id: str
-    text: str
-    source: str
-    group_id: str
-    metadata: Dict[str, Any]
+# class Requirement(TypedDict):
+#     req_id: str
+#     text: str
 
 
 class MARVAState(TypedDict, total=False):

@@ -11,3 +11,11 @@ class Requirement:
         # VDA outputs
         self.final_decision = None
         self.recommendation = []
+
+    def getAgentInput(self) -> dict:
+        return {
+            {
+                "req_id": self.id,
+                "text": self.text,
+            }
+        }
