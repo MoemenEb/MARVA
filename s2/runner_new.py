@@ -35,10 +35,6 @@ def main(mode: str, scope: str, limit: int | None):
     requirementSet = RequirementSet(requirements)
     logger.info(f"Starting S2 runner with mode={mode}, scope={scope}, limit={limit}")
 
-    # -----------------------------
-    # Grouping (needed for group scope)
-    # -----------------------------
-    groups = requirementSet
 
     # -----------------------------
     # Init LLM + agent

@@ -6,7 +6,6 @@ import logging
 from pathlib import Path
 
 from common.llm_client import LLMClient
-# from common.dataset_selector import filter_requirements
 from common.normalization import extract_json_block
 from s1.pipeline import S1Pipeline
 from utils.reader.reader import Reader
@@ -14,7 +13,6 @@ from entity.requirement_set import RequirementSet
 from common.logging.setup import setup_logging
 from s1.logger import init_s1_logger
 
-# DATA_PATH = Path("data/processed/requirements.json")
 DECISON_OUTPUT_PATH = Path("out/s1_decisions/")
 RAW_DATA_PATH = Path("data/raw/")
 
@@ -39,12 +37,6 @@ def main(mode: str, scope: str, limit: int | None):
         requirements = requirements_set[:limit]
     requirementSet = RequirementSet(requirements)
 
-    # with open(DATA_PATH, encoding="utf-8") as f:
-    #     requirements = json.load(f)
-    # requirements = filter_requirements(requirements, scope)
-
-    # if limit:
-    #     requirements = requirements[:limit]
 
     llm = LLMClient(
         host="http://localhost:11434",

@@ -16,12 +16,6 @@ RAW_DATA_PATH = Path("data/raw/")
 
 
 def main(mode: str, scope: str, limit: int | None):
-    """
-    S3 runner (MARVA)
-
-    mode: dataset selector (wasp, reqview, ...)
-    scope: single | group
-    """
 
     # -----------------------------
     # Load dataset
