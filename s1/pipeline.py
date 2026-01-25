@@ -19,45 +19,11 @@ class S1Pipeline:
         self.single_prompt = load_prompt(self.SINGLE_PROMPT_PATH)
         self.group_prompt = load_prompt(self.GROUP_PROMPT_PATH)
         self.logger = logging.getLogger(self.LOGGER)
-
-
-    def run_single(self, requirement: dict) -> dict:
-        self.logger.info(f"Running S1 single for requirement ID: {requirement.id}")
-        prompt = self.single_prompt.replace(
-            "{{REQUIREMENT}}", requirement.text
-        )
-
-        response = self.llm.generate(prompt)
-
-        return {
-            "mode": "single",
-            "req_id": requirement.id,
-            "llm_output": response["text"],
-            "latency_ms": response["latency_ms"],
-        }
-
-    def run_group(self, requirements: list[dict]) -> dict:
-        self.logger.info(f"Running S1 group for requirements")
-        joined_reqs = "\n".join(
-            f"[{r.id}] {r.text}" for r in requirements
-        )
-
-        prompt = self.group_prompt.replace(
-            "{{REQUIREMENT}}", joined_reqs
-        )
-
-        response = self.llm.generate(prompt)
-
-        return {
-            "mode": "group",
-            "requirements": joined_reqs,
-            "llm_output": response["text"],
-            "latency_ms": response["latency_ms"],
-        }
     
     def normalize_output(self, result:str) -> dict:
         self.logger.info(f"Normalizing output ")
-        json_result = extract_json_block(result["llm_output"])
+        self.logger.debug(f"Raw LLM output: {result}")
+        json_result = extract_json_block(result["text"])
         by_agent = {
             a["dimension"]: a["status"]
             for a in json_result["agents"]
@@ -66,13 +32,23 @@ class S1Pipeline:
         json_result.pop("agent", None)
         json_result["by_agent"] = by_agent
         return json_result
-
-    def execute(self, requirement, mode: str) -> dict:
-        self.logger.info(f"Executing S1 pipeline in {mode} mode")
+    
+    def run(self, requirmets:RequirementSet, mode:str):
+        results = []
         if mode == "single":
-            result = self.run_single(requirement)
+            for req in requirmets.requirements:
+                prompt = self.single_prompt.replace(
+                "{{REQUIREMENT}}", req.text
+                )
+                result = self.llm.generate(prompt)
+                normalized_result = self.normalize_output(result)
+                results.append(normalized_result)
         elif mode == "group":
-            result = self.run_group(requirement)
-        else:
-            raise ValueError(f"Invalid mode or missing input for mode: {mode}")
-        return self.normalize_output(result)
+            prompt = self.group_prompt.replace(
+            "{{REQUIREMENT}}", requirmets.join_requirements()
+            )
+            result = self.llm.generate(prompt)
+            normalized_result = self.normalize_output(result)
+            results.append(normalized_result)
+        return results
+  

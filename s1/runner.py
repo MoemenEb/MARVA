@@ -30,16 +30,9 @@ def main(mode: str, scope: str, limit: int | None):
         host="http://localhost:11434",
         model="qwen3:1.7b",
     )
-    #gemma3n:e2b
-    #gemma3:4b
-    #deepseek-r1:1.5b
-    #qwen3:1.7b
-    #qwen3:4b (heavy)
-    #llama3.2 (flaky)
-    #falcon3:3b
-    #ministral-3:3b
 
     pipeline = S1Pipeline(llm)
+    
     decision_summary = {
         "mode": mode,
         "scope": scope,
@@ -49,40 +42,16 @@ def main(mode: str, scope: str, limit: int | None):
     }
 
     startTime = time.perf_counter()
-    # -----------------------------
-    # SINGLE SCOPE
-    # -----------------------------
-    if mode == "single":
-        for req in requirement_set.requirements:    
-            json_result = pipeline.execute(req, mode)
-
-            summary = {
-                "requirements": {
-                    req.id: req.text
-                },
-                **json_result,
-            }
-            logger.debug(f"Validation summary for requirement ID {req.id}: {summary}")
-            logger.info(f"[S1|single] {req.id} done")
-            decision_summary["validation_decision"].append(summary)
-    # -----------------------------
-    # GROUP SCOPE
-    # -----------------------------
-    elif mode == "group":
-        json_result = pipeline.execute(requirement_set.requirements, mode)
-        summary = {
+    res = pipeline.run(requirement_set, mode)
+    summary = {
             "requirements": {
                 r.id: r.text
                 for r in requirement_set.requirements
             },
-            **json_result,
+            "results": res,
         }
-        logger.debug(f"Validation summary for group: {summary}")
-        logger.info("[S1|group] group analysis done")
-        decision_summary["validation_decision"].append(summary)
-    else:
-        raise ValueError(f"Invalid scope: {scope}")
-
+    logger.debug(f"Validation summary for {mode}: {summary}")
+    decision_summary["validation_decision"].append(summary)
     endTime = time.perf_counter()
     flowlatency = int((endTime - startTime))
     logger.info(f"S1 runner completed in {flowlatency} seconds")
