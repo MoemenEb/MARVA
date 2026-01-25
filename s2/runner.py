@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import argparse
 import logging
 from pathlib import Path
@@ -7,15 +6,13 @@ from pathlib import Path
 from common.llm_client import LLMClient
 from s2.validation_agents import ValidatorAgent
 from s2.validation_summary import ValidatorSummary
-from utils.reader.reader import Reader
-from entity.requirement_set import RequirementSet
+from utils.dataset_loader import load_dataset
 from common.logging.setup import setup_logging
 from s2.logger import init_s2_logger
+from utils.save_runner_decision import save_runner_decision
 
 
-DATA_PATH = Path("data/processed/requirements_grouped.json")
 DECISON_OUTPUT_PATH = Path("out/s2_decisions/")
-RAW_DATA_PATH = Path("data/raw/")
 
 
 
@@ -27,14 +24,9 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     # Load dataset
     # -----------------------------
-    DATA_PATH = RAW_DATA_PATH / f"{scope}"
-    reader = Reader.get_reader(DATA_PATH)
-    requirements_set = reader.read(DATA_PATH)
-    if limit:
-        requirements = requirements_set[:limit]
-    requirementSet = RequirementSet(requirements)
-    logger.info(f"Starting S2 runner with mode={mode}, scope={scope}, limit={limit}")
-
+    logger.info(f"Loading dataset {scope}")
+    requirement_set = load_dataset(scope, limit)
+    logger.info(f"Loaded {len(requirement_set.requirements)} requirements from dataset")
 
     # -----------------------------
     # Init LLM + agent
@@ -53,12 +45,8 @@ def main(mode: str, scope: str, limit: int | None):
     #ministral-3:3b
 
 
-    # agent = S2ValidatorAgent(llm)
     agents = ValidatorAgent(llm)
     summarizer = ValidatorSummary(llm)
-
-    out_dir = Path(f"s2/outputs/{scope}/{mode}")
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     decision_out_dir.mkdir(parents=True, exist_ok=True)
@@ -84,18 +72,9 @@ def main(mode: str, scope: str, limit: int | None):
     # Execute
     # -----------------------------
     if mode == "single":
-        for req in requirements:
-            out_file = out_dir / f"{req.id}.json"
-            # if out_file.exists():
-            #     continue
-
-            # group = groups.get(req.group_id)
-            # result = agent.run(req, group, mode)
+        for req in requirement_set.requirements:
             result = agents.execute(mode=mode, requirement=req, group=None)
-            print("result:", result)
             summary = summarizer.summarize(result, req)
-            print("Summary:", summary)
-
             final_decision["flow_latency_seconds"] = (_calculate_total_latency(result) + summary["latency_ms"])/1000
 
             decision = {
@@ -106,20 +85,12 @@ def main(mode: str, scope: str, limit: int | None):
                 "recommendations": summary["output"]["recommendations"],
             }
             final_decision["Validation Decisions"].append(decision)
-
-            with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
-
-            print(f"[S2-single] {req.id} done")
-
-        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-            json.dump(final_decision, f, indent=2, ensure_ascii=False)
+            logger.info(f"[S2-single] {req.id} done")
 
 
     elif mode == "group":
         reqi = {"requirements": []}
-        out_file = out_dir / f"group_{req.id}.json"
-        for req in requirementSet.requirements:
+        for req in requirement_set.requirements:
             requir = {
                     'requirement_id': req.id,
                     'requirement_text': req.text
@@ -127,10 +98,8 @@ def main(mode: str, scope: str, limit: int | None):
             reqi["requirements"].append(requir)
     
         print("Executing group validation...")
-        result = agents.execute(mode=mode, requirement=None, group=requirementSet)
-        print("Group result:", result)
+        result = agents.execute(mode=mode, requirement=None, group=requirement_set)
         summary = summarizer.summarize(result, reqi)
-        print("Group summary:", summary)
         final_decision["flow_latency_seconds"] = (_calculate_total_latency(result) + summary["latency_ms"])/1000
         decision = {
             **reqi,
@@ -139,16 +108,9 @@ def main(mode: str, scope: str, limit: int | None):
             "recommendations": summary["output"]["recommendations"],
         }
         final_decision["Validation Decisions"].append(decision)
+        logger.info(f"[S2-group] {req.id} done")
 
-        with open(out_file, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
-
-        print(f"[S2-group] {req.id} done")
-            
-        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-            json.dump(final_decision, f, indent=2, ensure_ascii=False)
-
-
+    save_runner_decision(final_decision, DECISON_OUTPUT_PATH)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run S2 baseline")
