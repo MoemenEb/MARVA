@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import argparse
 import logging
 from pathlib import Path
@@ -82,8 +81,6 @@ def main(mode: str, scope: str, limit: int | None):
             **single_out,
         }
         save_runner_decision(final_decision, DECISON_OUTPUT_PATH)
-        # with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-        #     json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
     elif mode == "group":
         reqi = {"requirements": []}
@@ -117,12 +114,6 @@ def main(mode: str, scope: str, limit: int | None):
         **full,
         }
         save_runner_decision(final_decision, DECISON_OUTPUT_PATH)
-        # with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-        #     json.dump(final_decision, f, indent=2, ensure_ascii=False)
-
-            # with open(out_file, "w", encoding="utf-8") as f:
-            #     json.dump(result, f, indent=2, ensure_ascii=False)
-
         logger.info(f"[S3-group] done")
 
 
