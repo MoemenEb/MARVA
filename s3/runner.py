@@ -1,34 +1,36 @@
 from datetime import datetime
 import json
 import argparse
+import logging
 from pathlib import Path
 import time
 
 
+from common.logging.setup import setup_logging
 from s3.graph import build_marva_s3_graph
 from s3.agents import build_stub_agents
-from utils.reader.reader import Reader
-from entity.requirement_set import RequirementSet
+from s3.logger import init_s3_logger
+from utils.dataset_loader import load_dataset
+from utils.save_runner_decision import save_runner_decision
 
-DATA_PATH = Path("data/processed/requirements_grouped.json")
+
 DECISON_OUTPUT_PATH = Path("out/s3_decisions/")
-RAW_DATA_PATH = Path("data/raw/")
 
 
 def main(mode: str, scope: str, limit: int | None):
 
+    setup_logging(run_id="s3_run_"+datetime.now().strftime('%Y%m%d'))
+    init_s3_logger()
+    logger = logging.getLogger("marva.s3.runner")
+    logger.info(f"Starting S3 runner with mode={mode}, scope={scope}, limit={limit}")
+    
+   
     # -----------------------------
     # Load dataset
     # -----------------------------
-    DATA_PATH = RAW_DATA_PATH / f"{scope}"
-    reader = Reader.get_reader(DATA_PATH)
-    requirements_set = reader.read(DATA_PATH)
-    if limit:
-        requirements = requirements_set[:limit]
-    requirementSet = RequirementSet(requirements)
-
-    print(f"[S3] mode={mode}, scope={scope}, count={len(requirements)}")
-
+    logger.info(f"Loading dataset {scope}")
+    requirement_set = load_dataset(scope, limit)
+    logger.info(f"Loaded {len(requirement_set.requirements)} requirements from dataset")
    
     # -----------------------------
     # Init agents + graph
@@ -36,9 +38,6 @@ def main(mode: str, scope: str, limit: int | None):
     agents = build_stub_agents()
     graph = build_marva_s3_graph(agents)
     app = graph.compile()
-
-    out_dir = Path(f"s3/outputs/{scope}/{mode}")
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     decision_out_dir.mkdir(parents=True, exist_ok=True)
@@ -58,9 +57,7 @@ def main(mode: str, scope: str, limit: int | None):
         single_out = {
             "Validation Decisions": []
         }
-        for req in requirementSet.requirements:
-            out_file = out_dir / f"{req.id}.json"
-
+        for req in requirement_set.requirements:
             state = {
                 "mode": "single",
                 "requirement": req,
@@ -75,11 +72,8 @@ def main(mode: str, scope: str, limit: int | None):
                 **decision
             }
             single_out["Validation Decisions"].append(full)
+            logger.info(f"[S3-single] {req.id} done")
 
-            with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(result, f, indent=2, ensure_ascii=False)
-
-            print(f"[S3-single] {req.id} done")
         endTime = time.perf_counter()
         flowlatency = int((endTime - startTime))   
         decision_summary["flow_latency_seconds"] = flowlatency 
@@ -87,18 +81,18 @@ def main(mode: str, scope: str, limit: int | None):
             **decision_summary,
             **single_out,
         }
-        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-            json.dump(final_decision, f, indent=2, ensure_ascii=False)
+        save_runner_decision(final_decision, DECISON_OUTPUT_PATH)
+        # with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+        #     json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
     elif mode == "group":
         reqi = {"requirements": []}
-        out_file = out_dir / f"group_run{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         startTime = time.perf_counter()
         state = {
                 "mode": "group",
-                "group": requirementSet.requirements,
+                "group": requirement_set.requirements,
             }
-        for r in requirementSet.requirements:
+        for r in requirement_set.requirements:
             requir = {
                     'req_id': r.id,
                     'text': r.text
@@ -122,13 +116,14 @@ def main(mode: str, scope: str, limit: int | None):
         **decision_summary,
         **full,
         }
-        with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
-            json.dump(final_decision, f, indent=2, ensure_ascii=False)
+        save_runner_decision(final_decision, DECISON_OUTPUT_PATH)
+        # with open(decision_out_dir / "decision_summary.json", "w", encoding="utf-8") as f:
+        #     json.dump(final_decision, f, indent=2, ensure_ascii=False)
 
-        with open(out_file, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
+            # with open(out_file, "w", encoding="utf-8") as f:
+            #     json.dump(result, f, indent=2, ensure_ascii=False)
 
-        print(f"[S3-group] done")
+        logger.info(f"[S3-group] done")
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ from s3.agents.completion_agent import CompletionAgent
 from s3.agents.consistency_agent import ConsistencyAgent
 from s3.agents.decision_agent import DecisionAgent
 from s3.agents.redundancy_agent import RedundancyAgent
-from s3.agents.stubs import StubAgent, DecisionStubAgent
+# from s3.agents.stubs import StubAgent, DecisionStubAgent
 
 
 def build_stub_agents():
