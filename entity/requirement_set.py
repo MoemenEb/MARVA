@@ -2,13 +2,25 @@ class RequirementSet:
     def __init__(self, requirements: list):
         self.requirements = requirements
 
-        self.pairwise_validations = {}
-        self.group_validations = {}
+        self.group_validations = []
 
         self.final_decision = None
-        self.recommendations = []   # list[str]
+        self.recommendations = {}   # list[str]
 
     def join_requirements(self) -> str:
         return "\n".join(
             f"[{r.id}] {r.text}" for r in self.requirements
             )
+    
+    def to_dict(self):
+        req = {
+            a.id : a.text
+            for a in self.requirements
+        }
+        return {
+            "reqs" : self.join_requirements(),
+            "status" : self.final_decision,
+            "group_Validation" : self.group_validations,
+            "recommendations" : self.recommendations
+
+        }

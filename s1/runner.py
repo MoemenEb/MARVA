@@ -11,8 +11,11 @@ from s1.pipeline import S1Pipeline
 from common.logging.setup import setup_logging
 from s1.logger import init_s1_logger
 
+from entity.decision import Decision
+
 DECISON_OUTPUT_PATH = Path("out/s1_decisions/")
 LOGGER = "marva.s1.runner"
+FRAMEWORK = "S1 Validation Agent v1.0"
 
 
 
@@ -32,32 +35,29 @@ def main(mode: str, scope: str, limit: int | None):
     )
 
     pipeline = S1Pipeline(llm)
-    
-    decision_summary = {
-        "mode": mode,
-        "scope": scope,
-        "Validation framework" : "S1 Validation Agent v1.0",
-        "flow_latency_seconds" : 0,
-        "validation_decision": [],
-    }
+    decision = Decision(
+        framework=FRAMEWORK,
+        mode=mode  
+    )
 
     startTime = time.perf_counter()
-    res = pipeline.run(requirement_set, mode)
-    summary = {
-            "requirements": {
-                r.id: r.text
-                for r in requirement_set.requirements
-            },
-            "results": res,
-        }
-    logger.debug(f"Validation summary for {mode}: {summary}")
-    decision_summary["validation_decision"].append(summary)
-    endTime = time.perf_counter()
-    flowlatency = int((endTime - startTime))
-    logger.info(f"S1 runner completed in {flowlatency} seconds")
-    decision_summary["flow_latency_seconds"] = flowlatency
+    logger.info("Start S1 pipeline")
+    pipeline.run(requirement_set, mode)
+    logger.info("S1 pipeline finished")
+    logger.info("Saving results ...")
     
-    save_runner_decision(decision_summary, DECISON_OUTPUT_PATH)
+    dec = (
+            [req.to_dict() for req in requirement_set.requirements]
+            if mode == "single"
+            else requirement_set.to_dict()
+        )
+    
+    decision.duration = int((time.perf_counter() - startTime))
+    decision.decision = dec
+    
+    dir = save_runner_decision(decision.to_dict(), DECISON_OUTPUT_PATH)
+    logger.info(f"S1 runner completed in {decision.duration} seconds")
+    logger.info(f"Validation summary is saved at: {DECISON_OUTPUT_PATH}/{dir}")
 
 
 if __name__ == "__main__":

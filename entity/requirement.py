@@ -6,16 +6,18 @@ class Requirement:
         self.metadata = {}
 
         # single-scope validation signals only
-        self.single_validations = {}
+        self.single_validations = []
 
         # VDA outputs
         self.final_decision = None
-        self.recommendation = []
+        self.recommendation = {}
 
-    def getAgentInput(self) -> dict:
+    def to_dict(self) -> dict:
         return {
-            {
-                "req_id": self.id,
-                "text": self.text,
-            }
+            "id": self.id,
+            "text": self.text,
+            "metadata": self.metadata,
+            "single_validations": self.single_validations,
+            "final_decision": self.final_decision,
+            "recommendation": self.recommendation,
         }

@@ -3,6 +3,8 @@ from common.prompt_loader import load_prompt
 import logging
 
 from entity.requirement_set import RequirementSet
+from entity.agent import AgentResult
+from entity.agent_set import Agent_set
 from utils.normalization import extract_json_block
 
 
@@ -20,35 +22,44 @@ class S1Pipeline:
         self.group_prompt = load_prompt(self.GROUP_PROMPT_PATH)
         self.logger = logging.getLogger(self.LOGGER)
     
-    def normalize_output(self, result:str) -> dict:
+    agents = []
+
+    def normalize_output(self, result:str):
         self.logger.info(f"Normalizing output ")
-        self.logger.debug(f"Raw LLM output: {result}")
         json_result = extract_json_block(result["text"])
-        by_agent = {
-            a["dimension"]: a["status"]
-            for a in json_result["agents"]
-        }
-        json_result.pop("agents", None)
-        json_result.pop("agent", None)
-        json_result["by_agent"] = by_agent
-        return json_result
+        self.save_agent_result(json_result["agents"])
+        return json_result["status"], json_result["recommendations"]
     
-    def run(self, requirmets:RequirementSet, mode:str):
-        results = []
+    def run(self, requirement_set:RequirementSet, mode:str):
         if mode == "single":
-            for req in requirmets.requirements:
-                prompt = self.single_prompt.replace(
-                "{{REQUIREMENT}}", req.text
-                )
-                result = self.llm.generate(prompt)
-                normalized_result = self.normalize_output(result)
-                results.append(normalized_result)
+            for requirement in requirement_set.requirements:
+                # prep prompt
+                prompt = self.single_prompt.replace("{{REQUIREMENT}}", requirement.text)
+                normalized_result = self.promptRun(prompt)
+                # Save result.
+                requirement.final_decision,requirement.recommendation = normalized_result
+                age = Agent_set(self.agents)
+                requirement.single_validations = age.agents_list()
         elif mode == "group":
-            prompt = self.group_prompt.replace(
-            "{{REQUIREMENT}}", requirmets.join_requirements()
-            )
-            result = self.llm.generate(prompt)
-            normalized_result = self.normalize_output(result)
-            results.append(normalized_result)
-        return results
+            # prep prompt
+            prompt = self.group_prompt.replace("{{REQUIREMENT}}", requirement_set.join_requirements())
+            normalized_result = self.promptRun(prompt)
+            # Save result
+            requirement_set.final_decision, requirement_set.recommendations = normalized_result
+            age = Agent_set(self.agents)
+            requirement_set.group_validations = age.agents_list()
+    
   
+    def promptRun(self,prompt):
+        return self.normalize_output(
+            self.llm.generate(prompt)
+            )
+    
+    def save_agent_result(self, agents_json):
+        self.agents.clear()
+        for agent in agents_json:
+            self.agents.append( AgentResult(
+                agent= agent["dimension"],
+                status= agent["status"],
+                issues= agent["issues"]
+            ))
