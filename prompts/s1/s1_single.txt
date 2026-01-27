@@ -73,6 +73,7 @@ Output Schema (JSON Only)
     {
       "dimension": "atomicity | clarity | completion | consistency",
       "status" : "PASS | FAIL | FLAG ",
+      "issues" : "<one sentences explaination, empty if status pass>"
     }
   ],
   "recommendations": [

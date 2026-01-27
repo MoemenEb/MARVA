@@ -3,6 +3,8 @@ from common.prompt_loader import load_prompt
 import logging
 
 from entity.requirement_set import RequirementSet
+from entity.agent import AgentResult
+from entity.agent_set import Agent_set
 from utils.normalization import extract_json_block
 
 
@@ -19,60 +21,45 @@ class S1Pipeline:
         self.single_prompt = load_prompt(self.SINGLE_PROMPT_PATH)
         self.group_prompt = load_prompt(self.GROUP_PROMPT_PATH)
         self.logger = logging.getLogger(self.LOGGER)
-
-
-    def run_single(self, requirement: dict) -> dict:
-        self.logger.info(f"Running S1 single for requirement ID: {requirement.id}")
-        prompt = self.single_prompt.replace(
-            "{{REQUIREMENT}}", requirement.text
-        )
-
-        response = self.llm.generate(prompt)
-
-        return {
-            "mode": "single",
-            "req_id": requirement.id,
-            "llm_output": response["text"],
-            "latency_ms": response["latency_ms"],
-        }
-
-    def run_group(self, requirements: list[dict]) -> dict:
-        self.logger.info(f"Running S1 group for requirements")
-        joined_reqs = "\n".join(
-            f"[{r.id}] {r.text}" for r in requirements
-        )
-
-        prompt = self.group_prompt.replace(
-            "{{REQUIREMENT}}", joined_reqs
-        )
-
-        response = self.llm.generate(prompt)
-
-        return {
-            "mode": "group",
-            "requirements": joined_reqs,
-            "llm_output": response["text"],
-            "latency_ms": response["latency_ms"],
-        }
     
-    def normalize_output(self, result:str) -> dict:
-        self.logger.info(f"Normalizing output ")
-        json_result = extract_json_block(result["llm_output"])
-        by_agent = {
-            a["dimension"]: a["status"]
-            for a in json_result["agents"]
-        }
-        json_result.pop("agents", None)
-        json_result.pop("agent", None)
-        json_result["by_agent"] = by_agent
-        return json_result
+    agents = []
 
-    def execute(self, requirement, mode: str) -> dict:
-        self.logger.info(f"Executing S1 pipeline in {mode} mode")
+    def normalize_output(self, result:str):
+        self.logger.info(f"Normalizing output ")
+        json_result = extract_json_block(result["text"])
+        self.save_agent_result(json_result["agents"])
+        return json_result["status"], json_result["recommendations"]
+    
+    def run(self, requirement_set:RequirementSet, mode:str):
         if mode == "single":
-            result = self.run_single(requirement)
+            for requirement in requirement_set.requirements:
+                # prep prompt
+                prompt = self.single_prompt.replace("{{REQUIREMENT}}", requirement.text)
+                normalized_result = self.promptRun(prompt)
+                # Save result.
+                requirement.final_decision,requirement.recommendation = normalized_result
+                age = Agent_set(self.agents)
+                requirement.single_validations = age.agents_list()
         elif mode == "group":
-            result = self.run_group(requirement)
-        else:
-            raise ValueError(f"Invalid mode or missing input for mode: {mode}")
-        return self.normalize_output(result)
+            # prep prompt
+            prompt = self.group_prompt.replace("{{REQUIREMENT}}", requirement_set.join_requirements())
+            normalized_result = self.promptRun(prompt)
+            # Save result
+            requirement_set.final_decision, requirement_set.recommendations = normalized_result
+            age = Agent_set(self.agents)
+            requirement_set.group_validations = age.agents_list()
+    
+  
+    def promptRun(self,prompt):
+        return self.normalize_output(
+            self.llm.generate(prompt)
+            )
+    
+    def save_agent_result(self, agents_json):
+        self.agents.clear()
+        for agent in agents_json:
+            self.agents.append( AgentResult(
+                agent= agent["dimension"],
+                status= agent["status"],
+                issues= agent["issues"]
+            ))

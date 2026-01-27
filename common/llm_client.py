@@ -20,6 +20,15 @@ class LLMClient:
         self.max_retries = max_retries
         self.retry_backoff = retry_backoff
 
+    llm_response = {
+        
+                    "execution_status": "",
+                    "attempts": 0,
+                    "text": "",
+                    "latency_ms": 0,
+                    "error": None     
+                }
+
     def generate(self, prompt: str) -> Dict:
         url = f"{self.host}/api/generate"
         payload = {
@@ -46,15 +55,11 @@ class LLMClient:
 
                 elapsed = int((time.time() - start) * 1000)
                 data = response.json()
-
-                return {
-                    "execution_status": "SUCCESS",
-                    "attempts": attempts,
-                    "text": data.get("response", "").strip(),
-                    "model": self.model,
-                    "latency_ms": elapsed,
-                    "error": None
-                }
+                self.llm_response["execution_status"] = "SUCCESS"
+                self.llm_response["attempts"] = attempts
+                self.llm_response["text"] = data.get("response", "").strip()
+                self.llm_response["latency_ms"] = elapsed
+                return self.llm_response
 
             except requests.exceptions.Timeout:
                 if attempts > self.max_retries:
@@ -63,21 +68,17 @@ class LLMClient:
 
             except requests.exceptions.RequestException as e:
                 elapsed = int((time.time() - start) * 1000)
-                return {
-                    "execution_status": "ERROR",
-                    "attempts": attempts,
-                    "text": None,
-                    "model": self.model,
-                    "latency_ms": elapsed,
-                    "error": str(e)
-                }
+                self.llm_response["execution_status"] = "ERROR"
+                self.llm_response["attempts"] = attempts
+                self.llm_response["error"] = str(e)
+                self.llm_response["text"] = None
+                self.llm_response["latency_ms"] = elapsed
+                return self.llm_response
 
         elapsed = int((time.time() - start) * 1000)
-        return {
-            "execution_status": "TIMEOUT",
-            "attempts": attempts,
-            "text": None,
-            "model": self.model,
-            "latency_ms": elapsed,
-            "error": f"Timed out after {attempts} attempts"
-        }
+        self.llm_response["execution_status"] = "TIMEOUT"
+        self.llm_response["attempts"] = attempts
+        self.llm_response["text"] = None
+        self.llm_response["latency_ms"] = elapsed
+        self.llm_response["error"] = "Max retries exceeded due to timeout."
+        return self.llm_response

@@ -70,6 +70,7 @@ Output Schema (JSON Only)
     {
       "dimension": "redundancy | completion | consistency",
       "status" : "PASS | FAIL | FLAG ",
+      "issues" : "<one sentences explaination, empty if status pass>"
     }
   ],
   "recommendations": [
