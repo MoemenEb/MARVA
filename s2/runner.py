@@ -2,14 +2,15 @@ from datetime import datetime
 import argparse
 import logging
 from pathlib import Path
+import time
 
 from common.llm_client import LLMClient
 from s2.validation_agents import ValidatorAgent
-from s2.validation_summary import ValidatorSummary
 from utils.dataset_loader import load_dataset
 from common.logging.setup import setup_logging
 from s2.logger import init_s2_logger
 from utils.save_runner_decision import save_runner_decision
+from entity.decision import Decision
 
 
 DECISON_OUTPUT_PATH = Path("out/s2_decisions/")
@@ -35,82 +36,35 @@ def main(mode: str, scope: str, limit: int | None):
         host="http://localhost:11434",
         model="qwen3:1.7b",
     )
-    #gemma3n:e2b
-    #gemma3:4b
-    #deepseek-r1:1.5b
-    #qwen3:1.7b
-    #qwen3:4b (heavy)
-    #llama3.2 (flaky)
-    #falcon3:3b
-    #ministral-3:3b
-
 
     agents = ValidatorAgent(llm)
-    summarizer = ValidatorSummary(llm)
-
-    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-    decision_out_dir.mkdir(parents=True, exist_ok=True)
-
-    def _calculate_total_latency(results: dict) -> int:
-        """Calculate total latency from validation results."""
-        print(results)
-        return sum(
-            item['latency_ms'] 
-            for item in results.values() 
-            if isinstance(item, dict) and 'latency_ms' in item
-        )
     
-    final_decision = {
-            "mode": mode,
-            "scope": scope,
-            "Validation framework" : "S2 Validation Agent v1.0",
-            "flow_latency_seconds": 0,
-            "Validation Decisions": [],
-        }
+    decision = Decision(
+        framework= "S2 Validation Agent v1.0",
+        mode=mode
+    )
 
     # -----------------------------
     # Execute
     # -----------------------------
-    if mode == "single":
-        for req in requirement_set.requirements:
-            result = agents.execute(mode=mode, requirement=req, group=None)
-            summary = summarizer.summarize(result, req)
-            final_decision["flow_latency_seconds"] = (_calculate_total_latency(result) + summary["latency_ms"])/1000
 
-            decision = {
-                "requirement_id": req.id,
-                "requirement_text": req.text,
-                "decision": summary["output"]["final_status"],
-                "by_agent" : {k: v["output"]["decision"] for k, v in result.items()},
-                "recommendations": summary["output"]["recommendations"],
-            }
-            final_decision["Validation Decisions"].append(decision)
-            logger.info(f"[S2-single] {req.id} done")
-
-
-    elif mode == "group":
-        reqi = {"requirements": []}
-        for req in requirement_set.requirements:
-            requir = {
-                    'requirement_id': req.id,
-                    'requirement_text': req.text
-                }
-            reqi["requirements"].append(requir)
+    startTime = time.perf_counter()
     
-        print("Executing group validation...")
-        result = agents.execute(mode=mode, requirement=None, group=requirement_set)
-        summary = summarizer.summarize(result, reqi)
-        final_decision["flow_latency_seconds"] = (_calculate_total_latency(result) + summary["latency_ms"])/1000
-        decision = {
-            **reqi,
-            "decision": summary["output"]["final_status"],
-            "by_agent" : {k: v["output"]["decision"] for k, v in result.items()},
-            "recommendations": summary["output"]["recommendations"],
-        }
-        final_decision["Validation Decisions"].append(decision)
-        logger.info(f"[S2-group] {req.id} done")
+    logger.info("Start S2 pipeline")
+    agents.new_run(mode=mode, requirement_set=requirement_set)
 
-    save_runner_decision(final_decision, DECISON_OUTPUT_PATH)
+    decision.duration = int((time.perf_counter() - startTime))
+    logger.info("S2 pipeline finished")
+    
+    logger.info("Saving results ...")
+    decision.set_decision(requirement_set)
+    
+    dir = save_runner_decision(decision.to_dict(), DECISON_OUTPUT_PATH)
+
+    logger.info(f"S2 runner completed in {decision.duration} seconds")
+    logger.info(f"Validation summary is saved at: {DECISON_OUTPUT_PATH}/{dir}")
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run S2 baseline")
