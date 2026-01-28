@@ -3,7 +3,6 @@ from utils.normalization import extract_json_block
 from common.prompt_loader import load_prompt
 from entity.requirement_set import RequirementSet
 from entity.agent import AgentResult
-from entity.agent_set import Agent_set
 
 
 class ValidatorAgent:
@@ -29,45 +28,7 @@ class ValidatorAgent:
         self.summary_prompt = load_prompt("s2_vdp")
 
 
-    # def run(self, prompt_key: str, content: str) -> dict:
-    #     """Execute validation using specified prompt and content."""
-    #     prompt = self.prompts[prompt_key].replace("{{REQUIREMENT}}", content)
-    #     response = self.llm.generate(prompt)
-    #     json_result = extract_json_block(response["text"])
-    #     return {
-    #         "output": json_result,
-    #         "latency_ms": response["latency_ms"],
-    #     }
-
-    # def validate_single(self, requirement) -> dict:
-    #     """Validate a single requirement across multiple criteria."""
-    #     self.logger.info(f"Validating single requirement: {requirement.id}")
-    #     self.logger.debug(f"Requirement text: {requirement.text}")
-    #     return {
-    #         key: self.run(key, requirement.text)
-    #         for key in ["atomicity", "clarity", "completion_single"]
-    #     }
-
-    # def validate_group(self, group) -> dict:
-    #     """Validate a group of requirements for completion, consistency, and redundancy."""
-    #     group_text = "\n".join(f"- {req.text}" for req in group.requirements)
-        
-    #     return {
-    #         key: self.run(key, group_text)
-    #         for key in ["completion_group", "consistency_group", "redundancy"]
-    #     }
-    
-    # def execute(self, mode: str, requirement = None, group = None) -> dict:
-    #     """Execute validation based on mode."""
-    #     if mode == "single" and requirement is not None:
-    #         return self.validate_single(requirement)
-    #     elif mode == "group" and group is not None:
-    #         return self.validate_group(group)
-    #     else:
-    #         raise ValueError("Invalid mode or missing requirement/group data.")
-        
-
-    def new_run(self, mode:str, requirement_set:RequirementSet):
+    def run(self, mode:str, requirement_set:RequirementSet):
         if mode == "single":
             for requirement in requirement_set.requirements:
                 for validation in self.single_prompts.keys():

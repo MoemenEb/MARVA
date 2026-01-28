@@ -51,7 +51,7 @@ def main(mode: str, scope: str, limit: int | None):
     startTime = time.perf_counter()
     
     logger.info("Start S2 pipeline")
-    agents.new_run(mode=mode, requirement_set=requirement_set)
+    agents.run(mode=mode, requirement_set=requirement_set)
 
     decision.duration = int((time.perf_counter() - startTime))
     logger.info("S2 pipeline finished")
