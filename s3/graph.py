@@ -66,7 +66,7 @@ def build_marva_s3_graph(agents: dict):
     graph.add_node("atomicity", lambda s: agents["atomicity"].run(s))
     graph.add_node("clarity", lambda s: agents["clarity"].run(s))
     graph.add_node("completion_single", lambda s: agents["completion_single"].run(s))
-    graph.add_node("consistency_single", lambda s: agents["consistency_single"].run(s))
+    # graph.add_node("consistency_single", lambda s: agents["consistency_single"].run(s))
 
     # Group-scope validation agents
     graph.add_node("redundancy", lambda s: agents["redundancy"].run(s))
@@ -132,11 +132,11 @@ def build_marva_s3_graph(agents: dict):
 
     graph.add_edge("single_parallel", "clarity")
     graph.add_edge("single_parallel", "completion_single")
-    graph.add_edge("single_parallel", "consistency_single")
+    # graph.add_edge("single_parallel", "consistency_single")
 
     graph.add_edge("clarity", "join_single")
     graph.add_edge("completion_single", "join_single")
-    graph.add_edge("consistency_single", "join_single")
+    # graph.add_edge("consistency_single", "join_single")
 
     graph.add_edge("join_single", "decision")
 
