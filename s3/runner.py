@@ -7,10 +7,12 @@ import time
 
 from common.logging.setup import setup_logging
 from s3.graph import build_marva_s3_graph
-from s3.agents import build_stub_agents
+from s3.agents import build_agents
 from s3.logger import init_s3_logger
 from utils.dataset_loader import load_dataset
 from utils.save_runner_decision import save_runner_decision
+
+from entity.decision import Decision
 
 
 DECISON_OUTPUT_PATH = Path("out/s3_decisions/")
@@ -34,12 +36,10 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     # Init agents + graph
     # -----------------------------
-    agents = build_stub_agents()
+    agents = build_agents()
     graph = build_marva_s3_graph(agents)
     app = graph.compile()
 
-    decision_out_dir = Path(DECISON_OUTPUT_PATH / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-    decision_out_dir.mkdir(parents=True, exist_ok=True)
 
     decision_summary = {
         "mode": mode,
@@ -47,6 +47,11 @@ def main(mode: str, scope: str, limit: int | None):
         "validation framework" : "MARVA v1.0",
         "flow_latency_seconds": None
     }
+
+    decision = Decision(
+        framework= "MARVA v1.0",
+        mode= mode
+    )
 
     # -----------------------------
     # Execute (SEMANTIC PARITY WITH S2)

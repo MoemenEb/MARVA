@@ -7,10 +7,9 @@ from s3.agents.completion_agent import CompletionAgent
 from s3.agents.consistency_agent import ConsistencyAgent
 from s3.agents.decision_agent import DecisionAgent
 from s3.agents.redundancy_agent import RedundancyAgent
-# from s3.agents.stubs import StubAgent, DecisionStubAgent
 
 
-def build_stub_agents():
+def build_agents():
     # -------------------------------------------------
     # Single shared LLM for all agents
     # -------------------------------------------------
@@ -20,14 +19,7 @@ def build_stub_agents():
             model="qwen3:1.7b",
             temperature=0.0,
         )
-    #gemma3n:e2b
-    #gemma3:4b
-    #deepseek-r1:1.5b
-    #qwen3:1.7b
-    #qwen3:4b (heavy)
-    #llama3.2 (flaky)
-    #falcon3:3b
-    #ministral-3:3b
+
     # -------------------------------------------------
     # Load prompts
     # -------------------------------------------------
@@ -53,7 +45,6 @@ def build_stub_agents():
 
 
     return {
-        # REAL agent
         "atomicity": AtomicityAgent(llm=create_agent_llm(), prompts=atomicity_prompts),
         "clarity": ClarityAgent(llm=create_agent_llm(), prompt=clarity_prompt),
         "completion_single": CompletionAgent(llm=create_agent_llm(), prompts=completion_prompts),

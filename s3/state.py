@@ -29,7 +29,7 @@ class MARVAState(TypedDict, total=False):
     atomicity: Annotated[Dict[str, Any], replace]
     clarity: Annotated[Dict[str, Any], replace]
     completion_single: Annotated[Dict[str, Any], replace]
-    consistency_single: Annotated[Dict[str, Any], replace]
+    # consistency_single: Annotated[Dict[str, Any], replace]
 
     # ----------------------------
     # Group-scope agent outputs
