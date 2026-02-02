@@ -1,6 +1,6 @@
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
-
+from entity.agent import AgentResult
 
 class ConsistencyAgent(BaseValidationAgent):
     def __init__(self, llm, prompts: dict[str, str]):
@@ -15,11 +15,16 @@ class ConsistencyAgent(BaseValidationAgent):
         result = extract_json_block(raw)
 
         return {
-            output_key: {
-                "agent": "consistency",
-                "decision": result["decision"],
-                "issues": result.get("issues", []),
-            }
+            output_key: AgentResult(
+                agent= output_key,
+                status=result["decision"],
+                issues= result.get("issues", [])
+            )
+            # {
+            #     "agent": "consistency",
+            #     "decision": result["decision"],
+            #     "issues": result.get("issues", []),
+            # }
         }
 
     # -------------------------------------------------

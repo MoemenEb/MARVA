@@ -1,6 +1,7 @@
 from typing import TypedDict, Dict, Any, List
 from typing_extensions import Annotated
 from entity.requirement import Requirement
+from entity.agent import AgentResult
 
 
 def replace(_, new):
@@ -26,19 +27,19 @@ class MARVAState(TypedDict, total=False):
     # ----------------------------
     # Single-scope agent outputs
     # ----------------------------
-    atomicity: Annotated[Dict[str, Any], replace]
-    clarity: Annotated[Dict[str, Any], replace]
-    completion_single: Annotated[Dict[str, Any], replace]
+    atomicity: Annotated[AgentResult, replace]
+    clarity: Annotated[AgentResult, replace]
+    completion_single: Annotated[AgentResult, replace]
     # consistency_single: Annotated[Dict[str, Any], replace]
 
     # ----------------------------
     # Group-scope agent outputs
     # ----------------------------
-    redundancy: Annotated[Dict[str, Any], replace]
-    completion_group: Annotated[Dict[str, Any], replace]
-    consistency_group: Annotated[Dict[str, Any], replace]
+    redundancy: Annotated[AgentResult, replace]
+    completion_group: Annotated[AgentResult, replace]
+    consistency_group: Annotated[AgentResult, replace]
 
     # ----------------------------
     # Final decision
     # ----------------------------
-    decision: Annotated[Dict[str, Any], replace]
+    decision: Annotated[AgentResult, replace]

@@ -1,5 +1,6 @@
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
+from entity.agent import AgentResult
 
 
 class DecisionAgent(BaseValidationAgent):
@@ -19,13 +20,17 @@ class DecisionAgent(BaseValidationAgent):
         recommendations = self._recommendations(state, aggregated, mode)
 
         return {
-            "decision": {
-                "agent": "validation decision agent",
-                # "mode": mode,
-                "final_decision": final_decision,
-                "by_agent": aggregated,
-                "recommendations": recommendations,
-            }
+            "decision": AgentResult(
+                agent="Decision Agent",
+                status= final_decision
+            )
+            # {
+            #     "agent": "validation decision agent",
+            #     # "mode": mode,
+            #     "final_decision": final_decision,
+            #     "by_agent": aggregated,
+            #     "recommendations": recommendations,
+            # }
         }
 
     # -------------------------------------------------
@@ -35,17 +40,17 @@ class DecisionAgent(BaseValidationAgent):
         results = {}
         if mode == "single":
             if "atomicity" in state:
-                results["atomicity"] = state["atomicity"]["decision"]
+                results["atomicity"] = state["atomicity"].status
 
-            if state.get("atomicity", {}).get("decision") != "FAIL":
+            if state.get("atomicity", {}).status != "FAIL":
                 for key in ["clarity", "completion_single", "consistency_single"]:
                     if key in state:
-                        results[key] = state[key]["decision"]
+                        results[key] = state[key].status
 
         elif mode == "group":
             for key in ["redundancy", "completion_group", "consistency_group"]:
                 if key in state:
-                    results[key] = state[key]["decision"]
+                    results[key] = state[key].status
 
         else:
             raise ValueError(f"Unknown mode: {mode}")
