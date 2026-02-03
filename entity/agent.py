@@ -11,3 +11,6 @@ class AgentResult:
             "Issues" : self.issues
         }
 
+    def __repr__(self) -> str:
+        return f"AgentResult(agent={self.agent!r}, status={self.status!r}, issues={self.issues!r})"
+

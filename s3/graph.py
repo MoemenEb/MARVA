@@ -10,7 +10,7 @@ def orchestrator_agent(state: MARVAState):
     return {
         "mode": state["mode"],
         "requirement": state.get("requirement"),
-        "group": state.get("group"),
+        "requirement_set": state.get("requirement_set"),
     }
 
 
@@ -95,7 +95,6 @@ def build_marva_s3_graph(agents: dict):
     # -------------------------------------------------
 
     def atomicity_router(state: MARVAState):
-        print(f"state here is: {state}" )
         if state["atomicity"].status.upper() == "FAIL":
             return "decision"
         return "single_parallel"

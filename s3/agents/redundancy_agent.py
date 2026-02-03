@@ -9,34 +9,18 @@ class RedundancyAgent(BaseValidationAgent):
         self.prompt = prompt
 
     def run(self, input_data: dict) -> dict:
-        group = input_data["group"]
+        requirement_set = input_data["requirement_set"]
 
-        prompt = self._build_prompt(group)
+        prompt = self.prompt.replace(
+            "{{REQUIREMENT}}", requirement_set.join_requirements()
+        )
         raw = self.llm.generate(prompt)["text"]
         result = extract_json_block(raw)
 
         return {
             "redundancy": AgentResult(
                 agent="redundancy",
-                status=result["decision"],
+                status=result.get("decision", "FLAG"),
                 issues=result.get("issues", [])
             )
-            # {
-            #     "agent": "redundancy",
-            #     "mode": "group",
-            #     "decision": result["decision"],
-            #     "issues": result.get("issues", []),
-            # }
         }
-
-    # -------------------------------------------------
-    # Prompt construction
-    # -------------------------------------------------
-    def _build_prompt(self, group: list[dict]) -> str:
-        joined = "\n".join(
-            f"- {req.text}" for req in group
-        )
-
-        return self.prompt.replace(
-            "{{REQUIREMENT}}", joined
-        )

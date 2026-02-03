@@ -22,24 +22,12 @@ class AtomicityAgent(BaseValidationAgent):
         # -------------------------------------------------
         # Step 2 — Normalize output
         # -------------------------------------------------
-        result = extract_json_block(initial_raw)      
-        # -------------------------------------------------
-        # Step 3 — Reflection
-        # -------------------------------------------------
-        # reflection_prompt = self.prompts["reflection"].replace(  
-        #     "{{REQUIREMENT}}", requirement_text
-        # ).replace(
-        #     "{{DECISION}}", result["decision"]
-        # ).replace(
-        #     "{{REASON}}", result.get("issues", [])
-        # )
-        # reflection_raw = self.llm.generate(reflection_prompt)["text"]
-        # reflection_result = extract_json_block(reflection_raw)
-        # print("Reflection result:", reflection_result)
+        result = extract_json_block(initial_raw)
+
         agent = AgentResult(
-            agent= "atomicity",
-            status= result["decision"],
-            issues= result.get("issues",[])
+            agent="atomicity",
+            status=result.get("decision", "FLAG"),
+            issues=result.get("issues", [])
         )
  
         return {"atomicity": agent}

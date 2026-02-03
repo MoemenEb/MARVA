@@ -16,15 +16,10 @@ class ConsistencyAgent(BaseValidationAgent):
 
         return {
             output_key: AgentResult(
-                agent= output_key,
-                status=result["decision"],
-                issues= result.get("issues", [])
+                agent=output_key,
+                status=result.get("decision", "FLAG"),
+                issues=result.get("issues", [])
             )
-            # {
-            #     "agent": "consistency",
-            #     "decision": result["decision"],
-            #     "issues": result.get("issues", []),
-            # }
         }
 
     # -------------------------------------------------
@@ -40,12 +35,9 @@ class ConsistencyAgent(BaseValidationAgent):
             return prompt, "consistency_single"
 
         if mode == "group":
-            group = input_data["group"]
-            joined = "\n".join(
-                f"- {req.text}" for req in group
-            )
+            requirement_set = input_data["requirement_set"]
             prompt = self.prompts["group"].replace(
-                "{{REQUIREMENT}}", joined
+                "{{REQUIREMENT}}", requirement_set.join_requirements()
             )
             return prompt, "consistency_group"
 

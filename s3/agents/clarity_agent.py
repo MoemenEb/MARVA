@@ -21,13 +21,8 @@ class ClarityAgent(BaseValidationAgent):
         return {
             "clarity": AgentResult(
                 agent="clarity",
-                status= result.get("decision", "FLAG"),
-                issues= result.get("issues", [])
+                status=result.get("decision", "FLAG"),
+                issues=result.get("issues", [])
             )
-            # {
-            #     "agent": "clarity",
-            #     "decision": result.get("decision", "FLAG"),
-            #     "issues": result.get("issues", []),
-            # }
         }
     
