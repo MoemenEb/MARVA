@@ -1,5 +1,6 @@
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
+from entity.agent import AgentResult
 
 
 class CompletionAgent(BaseValidationAgent):
@@ -17,11 +18,16 @@ class CompletionAgent(BaseValidationAgent):
         # arbitration = self._execute_redundant(prompt)
 
         return {
-            output_key: {
-                "agent": "completion",
-                "decision": result["decision"],
-                "issues": result.get("issues", []),
-            }
+            output_key: AgentResult(
+                agent= output_key,
+                status= result["decision"],
+                issues= result.get("issues", [])
+            )
+            # {
+            #     "agent": "completion",
+            #     "decision": result["decision"],
+            #     "issues": result.get("issues", []),
+            # }
         }
 
     # -------------------------------------------------

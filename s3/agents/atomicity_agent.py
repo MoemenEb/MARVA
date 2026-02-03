@@ -1,5 +1,6 @@
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
+from entity.agent import AgentResult
 
 class AtomicityAgent(BaseValidationAgent):
 
@@ -7,7 +8,7 @@ class AtomicityAgent(BaseValidationAgent):
         super().__init__(llm)
         self.prompts = prompts
 
-    def run(self, input_data) -> dict:
+    def run(self, input_data):
         requirement_text = input_data["requirement"].text
         # -------------------------------------------------
         # Step 1 — Initial judgment
@@ -35,9 +36,10 @@ class AtomicityAgent(BaseValidationAgent):
         # reflection_raw = self.llm.generate(reflection_prompt)["text"]
         # reflection_result = extract_json_block(reflection_raw)
         # print("Reflection result:", reflection_result)
-
-        return {"atomicity": {
-                "decision": result["decision"],
-                "issues": result.get("issues", []),
-            }
-        }
+        agent = AgentResult(
+            agent= "atomicity",
+            status= result["decision"],
+            issues= result.get("issues",[])
+        )
+ 
+        return {"atomicity": agent}

@@ -1,5 +1,6 @@
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
+from entity.agent import AgentResult
 
 
 class RedundancyAgent(BaseValidationAgent):
@@ -15,12 +16,17 @@ class RedundancyAgent(BaseValidationAgent):
         result = extract_json_block(raw)
 
         return {
-            "redundancy": {
-                "agent": "redundancy",
-                "mode": "group",
-                "decision": result["decision"],
-                "issues": result.get("issues", []),
-            }
+            "redundancy": AgentResult(
+                agent="redundancy",
+                status=result["decision"],
+                issues=result.get("issues", [])
+            )
+            # {
+            #     "agent": "redundancy",
+            #     "mode": "group",
+            #     "decision": result["decision"],
+            #     "issues": result.get("issues", []),
+            # }
         }
 
     # -------------------------------------------------

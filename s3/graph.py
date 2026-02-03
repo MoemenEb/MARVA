@@ -7,14 +7,6 @@ from s3.state import MARVAState
 # ------------------------------------------------------------------
 
 def orchestrator_agent(state: MARVAState):
-    """
-    Master MARVA Orchestrator Agent.
-
-    Conceptual role:
-    - Controls validation flow
-    - Can later be extended with reasoning / LLM logic
-    - Does NOT write validation results
-    """
     return {
         "mode": state["mode"],
         "requirement": state.get("requirement"),
@@ -42,16 +34,6 @@ def join_node(state: MARVAState):
 # ------------------------------------------------------------------
 
 def build_marva_s3_graph(agents: dict):
-    """
-    MARVA S3 Orchestration Graph (FINAL)
-
-    Properties:
-    - Explicit Master Orchestrator agent
-    - Atomicity hard gate (single mode only)
-    - Parallel validation where required
-    - Join nodes enforce fan-in
-    - Typed state (MARVAState) prevents root conflicts
-    """
 
     graph = StateGraph(MARVAState)
 
@@ -113,7 +95,8 @@ def build_marva_s3_graph(agents: dict):
     # -------------------------------------------------
 
     def atomicity_router(state: MARVAState):
-        if state["atomicity"]["decision"].upper() == "FAIL":
+        print(f"state here is: {state}" )
+        if state["atomicity"].status.upper() == "FAIL":
             return "decision"
         return "single_parallel"
 

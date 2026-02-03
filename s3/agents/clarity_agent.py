@@ -1,5 +1,6 @@
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
+from entity.agent import AgentResult
 
 class ClarityAgent(BaseValidationAgent):
   
@@ -18,10 +19,15 @@ class ClarityAgent(BaseValidationAgent):
         result = extract_json_block(response)
 
         return {
-            "clarity": {
-                "agent": "clarity",
-                "decision": result.get("decision", "FLAG"),
-                "issues": result.get("issues", []),
-            }
+            "clarity": AgentResult(
+                agent="clarity",
+                status= result.get("decision", "FLAG"),
+                issues= result.get("issues", [])
+            )
+            # {
+            #     "agent": "clarity",
+            #     "decision": result.get("decision", "FLAG"),
+            #     "issues": result.get("issues", []),
+            # }
         }
     
