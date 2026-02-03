@@ -3,7 +3,7 @@ from utils.normalization import extract_json_block
 from entity.agent import AgentResult
 
 class ClarityAgent(BaseValidationAgent):
-  
+
     def __init__(self, llm, prompt: str):
         super().__init__(llm)
         self.prompt = prompt
@@ -25,4 +25,3 @@ class ClarityAgent(BaseValidationAgent):
                 issues=result.get("issues", [])
             )
         }
-    

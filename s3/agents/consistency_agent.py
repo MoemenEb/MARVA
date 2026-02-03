@@ -42,5 +42,3 @@ class ConsistencyAgent(BaseValidationAgent):
             return prompt, "consistency_group"
 
         raise ValueError(f"Unknown consistency mode: {mode}")
-
-   

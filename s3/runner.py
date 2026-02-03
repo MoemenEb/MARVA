@@ -47,7 +47,7 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     # Execute
     # -----------------------------
-    startTime = time.perf_counter()
+    start_time = time.perf_counter()
     logger.info("Start S3 pipeline")
 
     if mode == "single":
@@ -73,12 +73,12 @@ def main(mode: str, scope: str, limit: int | None):
     # Save results
     # -----------------------------
     logger.info("Saving results ...")
-    decision.duration = int(time.perf_counter() - startTime)
+    decision.duration = int(time.perf_counter() - start_time)
     decision.set_decision(requirement_set)
 
-    dir = save_runner_decision(decision.to_dict(), DECISON_OUTPUT_PATH)
+    output_dir = save_runner_decision(decision.to_dict(), DECISON_OUTPUT_PATH)
     logger.info(f"S3 runner completed in {decision.duration} seconds")
-    logger.info(f"Validation summary is saved at: {DECISON_OUTPUT_PATH}/{dir}")
+    logger.info(f"Validation summary is saved at: {DECISON_OUTPUT_PATH}/{output_dir}")
 
 
 if __name__ == "__main__":

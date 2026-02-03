@@ -4,11 +4,11 @@ from entity.agent import AgentResult
 
 
 class CompletionAgent(BaseValidationAgent):
-  
+
     def __init__(self, llm, prompts: dict[str, str]):
         super().__init__(llm)
         self.prompts = prompts
-    
+
     def run(self, input_data: dict) -> dict:
         mode = input_data["mode"]
 
@@ -43,4 +43,3 @@ class CompletionAgent(BaseValidationAgent):
             return prompt, "completion_group"
 
         raise ValueError(f"Unknown completion mode: {mode}")
-

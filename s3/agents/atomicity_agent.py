@@ -8,7 +8,7 @@ class AtomicityAgent(BaseValidationAgent):
         super().__init__(llm)
         self.prompts = prompts
 
-    def run(self, input_data):
+    def run(self, input_data: dict) -> dict:
         requirement_text = input_data["requirement"].text
         # -------------------------------------------------
         # Step 1 — Initial judgment
