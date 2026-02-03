@@ -15,19 +15,13 @@ class CompletionAgent(BaseValidationAgent):
         prompt, output_key = self._build_prompt(input_data, mode)
         raw = self.llm.generate(prompt)["text"]
         result = extract_json_block(raw)
-        # arbitration = self._execute_redundant(prompt)
 
         return {
             output_key: AgentResult(
-                agent= output_key,
-                status= result["decision"],
-                issues= result.get("issues", [])
+                agent=output_key,
+                status=result.get("decision", "FLAG"),
+                issues=result.get("issues", [])
             )
-            # {
-            #     "agent": "completion",
-            #     "decision": result["decision"],
-            #     "issues": result.get("issues", []),
-            # }
         }
 
     # -------------------------------------------------
@@ -42,12 +36,9 @@ class CompletionAgent(BaseValidationAgent):
             return prompt, "completion_single"
 
         if mode == "group":
-            group = input_data["group"]
-            joined = "\n".join(
-                f"- {req.text}" for req in group
-            )
+            requirement_set = input_data["requirement_set"]
             prompt = self.prompts["group"].replace(
-                "{{REQUIREMENT}}", joined
+                "{{REQUIREMENT}}", requirement_set.join_requirements()
             )
             return prompt, "completion_group"
 

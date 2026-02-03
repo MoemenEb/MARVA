@@ -15,56 +15,57 @@ class DecisionAgent(BaseValidationAgent):
     def run(self, state: dict) -> dict:
         mode = state["mode"]
 
-        aggregated = self._collect_results(state, mode)
-        final_decision = self._final_decision(aggregated)
-        recommendations = self._recommendations(state, aggregated, mode)
+        validations = self._collect_validations(state, mode)
+        final_decision = self._final_decision(validations)
+        recommendations = self._recommendations(state, validations, mode)
+
+        # Update the entity directly
+        if mode == "single":
+            req = state["requirement"]
+            req.single_validations = validations
+            req.final_decision = final_decision
+            req.recommendation = recommendations
+        else:
+            req_set = state["requirement_set"]
+            req_set.group_validations = validations
+            req_set.final_decision = final_decision
+            req_set.recommendations = recommendations
 
         return {
             "decision": AgentResult(
                 agent="Decision Agent",
-                status= final_decision
+                status=final_decision
             )
-            # {
-            #     "agent": "validation decision agent",
-            #     # "mode": mode,
-            #     "final_decision": final_decision,
-            #     "by_agent": aggregated,
-            #     "recommendations": recommendations,
-            # }
         }
 
     # -------------------------------------------------
-    # Task 1 — Collect & aggregate
+    # Task 1 — Collect validations
     # -------------------------------------------------
-    def _collect_results(self, state: dict, mode: str) -> dict:
-        results = {}
+    def _collect_validations(self, state: dict, mode: str) -> list[dict]:
+        validations = []
+
         if mode == "single":
-            if "atomicity" in state:
-                results["atomicity"] = state["atomicity"].status
-
-            if state.get("atomicity", {}).status != "FAIL":
-                for key in ["clarity", "completion_single", "consistency_single"]:
-                    if key in state:
-                        results[key] = state[key].status
-
+            keys = ["atomicity", "clarity", "completion_single"]
         elif mode == "group":
-            for key in ["redundancy", "completion_group", "consistency_group"]:
-                if key in state:
-                    results[key] = state[key].status
-
+            keys = ["redundancy", "completion_group", "consistency_group"]
         else:
             raise ValueError(f"Unknown mode: {mode}")
 
-        return results
+        for key in keys:
+            if key in state and isinstance(state[key], AgentResult):
+                validations.append(state[key].to_dict())
+
+        return validations
 
     # -------------------------------------------------
     # Task 2 — Final decision
     # -------------------------------------------------
-    def _final_decision(self, aggregated: dict) -> str:
-        if aggregated.get("atomicity") == "FAIL":
+    def _final_decision(self, validations: list[dict]) -> str:
+        for v in validations:
+            if v.get("Agent") == "atomicity" and v.get("Status") == "FAIL":
                 return "FAIL"
 
-        if any(decision == "FLAG" for decision in aggregated.values()):
+        if any(v.get("Status") == "FLAG" for v in validations):
             return "FLAG"
 
         return "PASS"
@@ -72,8 +73,8 @@ class DecisionAgent(BaseValidationAgent):
     # -------------------------------------------------
     # Task 3 — Recommendations (LLM-based)
     # -------------------------------------------------
-    def _recommendations(self, state: dict, aggregated: dict, mode: str) -> list[str]:
-        issues = self._collect_issues(state)
+    def _recommendations(self, state: dict, validations: list[dict], mode: str) -> list[str]:
+        issues = self._collect_issues(validations)
         if not issues:
             return []
 
@@ -94,18 +95,15 @@ class DecisionAgent(BaseValidationAgent):
     # -------------------------------------------------
     # Helpers
     # -------------------------------------------------
-    def _collect_issues(self, state: dict) -> str:
+    def _collect_issues(self, validations: list[dict]) -> str:
         lines = []
-        for key, value in state.items():
-            if isinstance(value, dict) and value.get("issues"):
-                lines.append(f"{key}: {value['issues']}")
-
+        for v in validations:
+            if v.get("Issues"):
+                lines.append(f"{v['Agent']}: {v['Issues']}")
         return "\n".join(lines)
 
     def _format_requirements(self, state: dict, mode: str) -> str:
         if mode == "single":
             return state["requirement"].text
 
-        return "\n".join(
-            f"- {req.text}" for req in state["group"]
-        )
+        return state["requirement_set"].join_requirements()

@@ -1,6 +1,7 @@
-from typing import TypedDict, Dict, Any, List
+from typing import TypedDict
 from typing_extensions import Annotated
 from entity.requirement import Requirement
+from entity.requirement_set import RequirementSet
 from entity.agent import AgentResult
 
 
@@ -22,7 +23,7 @@ class MARVAState(TypedDict, total=False):
     # INPUT CHANNELS (IMMUTABLE)
     # ----------------------------
     requirement: Annotated[Requirement, replace]
-    group: Annotated[List[Requirement], replace]
+    requirement_set: Annotated[RequirementSet, replace]
 
     # ----------------------------
     # Single-scope agent outputs
