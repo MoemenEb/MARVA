@@ -1,6 +1,6 @@
 from .agent import AgentResult
 
-class Agent_set:
+class AgentSet:
     def __init__(self, agents: list[AgentResult]):
         self.agent_list = agents
 

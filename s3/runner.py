@@ -13,7 +13,7 @@ from utils.save_runner_decision import save_runner_decision
 from entity.decision import Decision
 
 
-DECISON_OUTPUT_PATH = Path("out/s3_decisions/")
+DECISION_OUTPUT_PATH = Path("out/s3_decisions/")
 FRAMEWORK = "MARVA v1.0"
 LOGGER = "marva.s3.runner"
 
@@ -76,9 +76,9 @@ def main(mode: str, scope: str, limit: int | None):
     decision.duration = int(time.perf_counter() - start_time)
     decision.set_decision(requirement_set)
 
-    output_dir = save_runner_decision(decision.to_dict(), DECISON_OUTPUT_PATH)
+    output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
     logger.info(f"S3 runner completed in {decision.duration} seconds")
-    logger.info(f"Validation summary is saved at: {DECISON_OUTPUT_PATH}/{output_dir}")
+    logger.info(f"Validation summary is saved at: {DECISION_OUTPUT_PATH}/{output_dir}")
 
 
 if __name__ == "__main__":

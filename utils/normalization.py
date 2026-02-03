@@ -1,5 +1,8 @@
 import json
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 
 
 def extract_json_block(text: str) -> dict:
@@ -15,11 +18,10 @@ def extract_json_block(text: str) -> dict:
         pass
 
     # Regex to extract JSON object
-    # match = re.search(r"\{.*\}", text, re.DOTALL)
     match = re.search(r"(?:```json\s*)?(\{.*?\})(?:\s*```)?", text, re.DOTALL)
 
     if not match:
-        print("No JSON block found.")
+        logger.warning("No JSON block found in LLM response.")
         return {
             "decision": "FLAG",
             "issues": []

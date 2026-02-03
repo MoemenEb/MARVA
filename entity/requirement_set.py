@@ -20,7 +20,7 @@ class RequirementSet:
         return {
             "reqs" : self.join_requirements(),
             "status" : self.final_decision,
-            "group_Validation" : self.group_validations,
+            "group_validations": self.group_validations,
             "recommendations" : self.recommendations
 
         }

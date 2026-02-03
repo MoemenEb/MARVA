@@ -13,7 +13,7 @@ from utils.save_runner_decision import save_runner_decision
 from entity.decision import Decision
 
 
-DECISON_OUTPUT_PATH = Path("out/s2_decisions/")
+DECISION_OUTPUT_PATH = Path("out/s2_decisions/")
 
 
 
@@ -48,21 +48,21 @@ def main(mode: str, scope: str, limit: int | None):
     # Execute
     # -----------------------------
 
-    startTime = time.perf_counter()
+    start_time = time.perf_counter()
     
     logger.info("Start S2 pipeline")
     agents.run(mode=mode, requirement_set=requirement_set)
 
-    decision.duration = int((time.perf_counter() - startTime))
+    decision.duration = int((time.perf_counter() - start_time))
     logger.info("S2 pipeline finished")
     
     logger.info("Saving results ...")
     decision.set_decision(requirement_set)
     
-    dir = save_runner_decision(decision.to_dict(), DECISON_OUTPUT_PATH)
+    output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
 
     logger.info(f"S2 runner completed in {decision.duration} seconds")
-    logger.info(f"Validation summary is saved at: {DECISON_OUTPUT_PATH}/{dir}")
+    logger.info(f"Validation summary is saved at: {DECISION_OUTPUT_PATH}/{output_dir}")
 
 
 

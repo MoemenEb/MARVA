@@ -13,7 +13,7 @@ from s1.logger import init_s1_logger
 
 from entity.decision import Decision
 
-DECISON_OUTPUT_PATH = Path("out/s1_decisions/")
+DECISION_OUTPUT_PATH = Path("out/s1_decisions/")
 LOGGER = "marva.s1.runner"
 FRAMEWORK = "S1 Validation Agent v1.0"
 
@@ -40,7 +40,7 @@ def main(mode: str, scope: str, limit: int | None):
         mode=mode  
     )
 
-    startTime = time.perf_counter()
+    start_time = time.perf_counter()
     logger.info("Start S1 pipeline")
     pipeline.run(requirement_set, mode)
     logger.info("S1 pipeline finished")
@@ -52,12 +52,12 @@ def main(mode: str, scope: str, limit: int | None):
             else requirement_set.to_dict()
         )
     
-    decision.duration = int((time.perf_counter() - startTime))
+    decision.duration = int((time.perf_counter() - start_time))
     decision.decision = dec
     
-    dir = save_runner_decision(decision.to_dict(), DECISON_OUTPUT_PATH)
+    output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
     logger.info(f"S1 runner completed in {decision.duration} seconds")
-    logger.info(f"Validation summary is saved at: {DECISON_OUTPUT_PATH}/{dir}")
+    logger.info(f"Validation summary is saved at: {DECISION_OUTPUT_PATH}/{output_dir}")
 
 
 if __name__ == "__main__":

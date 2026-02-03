@@ -4,7 +4,7 @@ import logging
 
 from entity.requirement_set import RequirementSet
 from entity.agent import AgentResult
-from entity.agent_set import Agent_set
+from entity.agent_set import AgentSet
 from utils.normalization import extract_json_block
 
 
@@ -21,8 +21,7 @@ class S1Pipeline:
         self.single_prompt = load_prompt(self.SINGLE_PROMPT_PATH)
         self.group_prompt = load_prompt(self.GROUP_PROMPT_PATH)
         self.logger = logging.getLogger(self.LOGGER)
-    
-    agents = []
+        self.agents = []
 
     def normalize_output(self, result:str):
         self.logger.info(f"Normalizing output ")
@@ -35,22 +34,22 @@ class S1Pipeline:
             for requirement in requirement_set.requirements:
                 # prep prompt
                 prompt = self.single_prompt.replace("{{REQUIREMENT}}", requirement.text)
-                normalized_result = self.promptRun(prompt)
+                normalized_result = self.prompt_run(prompt)
                 # Save result.
                 requirement.final_decision,requirement.recommendation = normalized_result
-                age = Agent_set(self.agents)
+                age = AgentSet(self.agents)
                 requirement.single_validations = age.agents_list()
         elif mode == "group":
             # prep prompt
             prompt = self.group_prompt.replace("{{REQUIREMENT}}", requirement_set.join_requirements())
-            normalized_result = self.promptRun(prompt)
+            normalized_result = self.prompt_run(prompt)
             # Save result
             requirement_set.final_decision, requirement_set.recommendations = normalized_result
-            age = Agent_set(self.agents)
+            age = AgentSet(self.agents)
             requirement_set.group_validations = age.agents_list()
     
   
-    def promptRun(self,prompt):
+    def prompt_run(self, prompt):
         return self.normalize_output(
             self.llm.generate(prompt)
             )
