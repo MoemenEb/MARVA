@@ -6,9 +6,9 @@ class AgentResult:
 
     def to_dict(self):
         return{
-            "Agent" : self.agent,
-            "Status" : self.status,
-            "Issues" : self.issues
+            "agent" : self.agent,
+            "status" : self.status,
+            "issues" : self.issues
         }
 
     def __repr__(self) -> str:

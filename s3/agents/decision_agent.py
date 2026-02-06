@@ -62,10 +62,10 @@ class DecisionAgent(BaseValidationAgent):
     # -------------------------------------------------
     def _final_decision(self, validations: list[dict]) -> str:
         for v in validations:
-            if v.get("Agent") == "atomicity" and v.get("Status") == "FAIL":
+            if v.get("agent") == "atomicity" and v.get("status") == "FAIL":
                 return "FAIL"
 
-        if any(v.get("Status") == "FLAG" for v in validations):
+        if any(v.get("status") == "FLAG" for v in validations):
             return "FLAG"
 
         return "PASS"
@@ -100,8 +100,8 @@ class DecisionAgent(BaseValidationAgent):
     def _collect_issues(self, validations: list[dict]) -> str:
         lines = []
         for v in validations:
-            if v.get("Issues"):
-                lines.append(f"{v['Agent']}: {v['Issues']}")
+            if v.get("issues"):
+                lines.append(f"{v['agent']}: {v['issues']}")
         return "\n".join(lines)
 
     def _format_requirements(self, state: dict, mode: str) -> str:
