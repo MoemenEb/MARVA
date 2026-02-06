@@ -6,6 +6,7 @@ from .base_reader import BaseReader
 
 class Reader:
 
+    @staticmethod
     def get_reader(file_path: str) -> BaseReader:
         _, ext = os.path.splitext(file_path)
         ext = ext.lower()
