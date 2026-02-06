@@ -5,7 +5,7 @@ class RequirementSet:
         self.group_validations = []
 
         self.final_decision = None
-        self.recommendations = {}   # list[str]
+        self.recommendations = []
 
     def join_requirements(self) -> str:
         return "\n".join(
@@ -13,10 +13,6 @@ class RequirementSet:
             )
     
     def to_dict(self):
-        req = {
-            a.id : a.text
-            for a in self.requirements
-        }
         return {
             "reqs" : self.join_requirements(),
             "status" : self.final_decision,
