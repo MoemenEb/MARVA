@@ -14,9 +14,11 @@ class ClarityAgent(BaseValidationAgent):
             "{{REQUIREMENT}}", requirement_text
         )
 
-        response = self.llm.generate(filled_prompt)["text"]
+        response = self.llm.generate(filled_prompt)
+        if response["execution_status"] != "SUCCESS":
+            return {"clarity": AgentResult(agent="clarity", status="FLAG", issues=[])}
 
-        result = extract_json_block(response)
+        result = extract_json_block(response["text"])
 
         return {
             "clarity": AgentResult(

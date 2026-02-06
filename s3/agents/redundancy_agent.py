@@ -14,8 +14,10 @@ class RedundancyAgent(BaseValidationAgent):
         prompt = self.prompt.replace(
             "{{REQUIREMENT}}", requirement_set.join_requirements()
         )
-        raw = self.llm.generate(prompt)["text"]
-        result = extract_json_block(raw)
+        response = self.llm.generate(prompt)
+        if response["execution_status"] != "SUCCESS":
+            return {"redundancy": AgentResult(agent="redundancy", status="FLAG", issues=[])}
+        result = extract_json_block(response["text"])
 
         return {
             "redundancy": AgentResult(

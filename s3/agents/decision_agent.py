@@ -87,8 +87,10 @@ class DecisionAgent(BaseValidationAgent):
             .replace("{{ISSUES}}", issues)
         )
 
-        raw = self.llm.generate(prompt)["text"]
-        parsed = extract_json_block(raw)
+        response = self.llm.generate(prompt)
+        if response["execution_status"] != "SUCCESS":
+            return []
+        parsed = extract_json_block(response["text"])
 
         return parsed.get("recommendations", [])
 

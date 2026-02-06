@@ -25,6 +25,9 @@ class S1Pipeline:
 
     def normalize_output(self, result:str):
         self.logger.info(f"Normalizing output ")
+        if result["execution_status"] != "SUCCESS":
+            self.logger.warning(f"LLM call failed: {result['execution_status']} - {result.get('error')}")
+            return "FLAG", []
         json_result = extract_json_block(result["text"])
         self.save_agent_result(json_result["agents"])
         return json_result["status"], json_result["recommendations"]
