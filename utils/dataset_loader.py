@@ -2,7 +2,8 @@ from entity.requirement_set import RequirementSet
 from utils.reader.reader import Reader
 from pathlib import Path
 
-RAW_DATA_PATH = Path("data/raw/")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+RAW_DATA_PATH = PROJECT_ROOT / "data" / "raw"
 
 
 def load_dataset(path: str, limit: int | None = None) -> RequirementSet:
