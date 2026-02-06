@@ -14,8 +14,8 @@ def extract_json_block(text: str) -> dict:
     # Try direct parse first
     try:
         return json.loads(text)
-    except Exception:
-        pass
+    except (json.JSONDecodeError, TypeError):
+        logger.debug("Direct JSON parse failed, trying regex extraction.")
 
     # Regex to extract JSON object
     match = re.search(r"(?:```json\s*)?(\{.*?\})(?:\s*```)?", text, re.DOTALL)
@@ -29,7 +29,8 @@ def extract_json_block(text: str) -> dict:
 
     try:
         return json.loads(match.group(0))
-    except Exception:
+    except (json.JSONDecodeError, TypeError):
+        logger.warning("Failed to parse extracted JSON block, returning FLAG.")
         return {
             "decision": "FLAG",
             "issues": []
