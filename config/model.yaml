@@ -1,4 +1,5 @@
 provider: ollama
+host: http://localhost:11434
 model_name: llama3.2
 temperature: 0.0
 max_tokens: 1024

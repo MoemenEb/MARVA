@@ -7,6 +7,7 @@ from utils.dataset_loader import load_dataset
 from utils.save_runner_decision import save_runner_decision
 
 from common.llm_client import LLMClient
+from common.config import load_config
 from s1.pipeline import S1Pipeline
 from common.logging.setup import setup_logging
 from s1.logger import init_s1_logger
@@ -29,9 +30,13 @@ def main(mode: str, scope: str, limit: int | None):
     requirement_set = load_dataset(scope, limit)
     logger.info(f"Loaded {len(requirement_set.requirements)} requirements from dataset")
 
+    cfg = load_config()
     llm = LLMClient(
-        host="http://localhost:11434",
-        model="qwen3:1.7b",
+        host=cfg["model"]["host"],
+        model=cfg["model"]["model_name"],
+        temperature=cfg["model"]["temperature"],
+        timeout=cfg["global"]["timeout_seconds"],
+        max_retries=cfg["global"]["max_retries"],
     )
 
     pipeline = S1Pipeline(llm)

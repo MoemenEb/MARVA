@@ -1,6 +1,7 @@
 # s3/agents/__init__.py
 
 from common.llm_client import LLMClient
+from common.config import load_config
 from common.prompt_loader import load_prompt
 from s3.agents.atomicity_agent import AtomicityAgent
 from s3.agents.clarity_agent import ClarityAgent
@@ -14,11 +15,14 @@ def build_agents():
     # -------------------------------------------------
     # Single shared LLM for all agents
     # -------------------------------------------------
+    cfg = load_config()
     def create_agent_llm():
         return LLMClient(
-            host="http://localhost:11434",
-            model="qwen3:1.7b",
-            temperature=0.0,
+            host=cfg["model"]["host"],
+            model=cfg["model"]["model_name"],
+            temperature=cfg["model"]["temperature"],
+            timeout=cfg["global"]["timeout_seconds"],
+            max_retries=cfg["global"]["max_retries"],
         )
 
     # -------------------------------------------------
