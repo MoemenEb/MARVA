@@ -27,6 +27,8 @@ Requirement under test:
 {{REQUIREMENT}}
 
 Internal Checklist (Do Not Show)
+For each requirement in the set above, check it against the whole requirement set for the following:
+
 A requirement directly contradicts another requirement in the set.
 Any conditions or triggers across requirements are mutually compatible.
 All prescribed outcomes across requirements can logically coexist.
