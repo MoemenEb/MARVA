@@ -23,6 +23,8 @@ Requirement under test:
 {{REQUIREMENT}}
 
 Internal Checklist (Do Not Show)
+For each requirement in the set above, check it against the whole requirement set for the following:
+
 No two or more requirements express the same intent.
 No additional capability or constraint is introduced.
 No requirement is fully duplicated or subsumed.
