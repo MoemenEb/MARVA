@@ -39,7 +39,7 @@ def build_agents():
     }
 
     consistency_prompts = {
-        "single": load_prompt("consistency_single"),
+        # "single": load_prompt("consistency_single"),
         "group": load_prompt("consistency_group"),
     }
 

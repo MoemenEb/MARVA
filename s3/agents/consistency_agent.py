@@ -29,12 +29,12 @@ class ConsistencyAgent(BaseValidationAgent):
     # -------------------------------------------------
     def _build_prompt(self, input_data: dict, mode: str) -> tuple[str, str]:
 
-        if mode == "single":
-            requirement_text = input_data["requirement"].text
-            prompt = self.prompts["single"].replace(
-                "{{REQUIREMENT}}", requirement_text
-            )
-            return prompt, "consistency_single"
+        # if mode == "single":
+        #     requirement_text = input_data["requirement"].text
+        #     prompt = self.prompts["single"].replace(
+        #         "{{REQUIREMENT}}", requirement_text
+        #     )
+        #     return prompt, "consistency_single"
 
         if mode == "group":
             requirement_set = input_data["requirement_set"]
