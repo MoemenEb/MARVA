@@ -20,14 +20,24 @@ class LLMClient:
         self.max_retries = max_retries
         self.retry_backoff = retry_backoff
 
-    def generate(self, prompt: str) -> Dict:
+    def generate(self, prompt: str, reset_session: bool = False) -> Dict:
+        """
+        Generate text using the LLM.
+
+        Args:
+            prompt: The input prompt text
+            reset_session: If True, reset conversation context. Default False for session reuse.
+
+        Returns:
+            Dict with execution_status, attempts, text, latency_ms, and error
+        """
         url = f"{self.host}/api/generate"
         payload = {
             "model": self.model,
             "prompt": prompt,
             "temperature": self.temperature,
             "stream": False,
-            "reset_session": True
+            "reset_session": reset_session
         }
 
         attempts = 0

@@ -22,6 +22,8 @@ def main(mode: str, scope: str, limit: int | None):
 
     setup_logging(run_id="s3_run_" + datetime.now().strftime('%Y%m%d'))
     init_s3_logger()
+    # Enable debug logging for graph to see parallel execution timing
+    logging.getLogger("marva.s3.graph").setLevel(logging.DEBUG)
     logger = logging.getLogger(LOGGER)
     logger.info(f"Starting S3 runner with mode={mode}, scope={scope}, limit={limit}")
 

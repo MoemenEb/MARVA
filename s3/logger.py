@@ -4,7 +4,7 @@ from pathlib import Path
 
 def init_s3_logger():
     logger = logging.getLogger("marva.s3")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     if logger.handlers:
         return
