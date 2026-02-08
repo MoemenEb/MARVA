@@ -1,5 +1,8 @@
 from langgraph.graph import StateGraph, END
 from s3.state import MARVAState
+from concurrent.futures import ThreadPoolExecutor
+import time
+import logging
 
 
 # ------------------------------------------------------------------
@@ -29,6 +32,59 @@ def join_node(state: MARVAState):
     return None
 
 
+def execute_parallel_agents(state: MARVAState, agent_list: list, max_workers: int = None):
+    """
+    Execute multiple agents in parallel using ThreadPoolExecutor.
+
+    Args:
+        state: Current state to pass to agents
+        agent_list: List of (agent, name) tuples to execute
+        max_workers: Number of threads (defaults to len(agent_list))
+
+    Returns:
+        Merged results from all agents
+    """
+    logger = logging.getLogger("marva.s3.graph")
+
+    if max_workers is None:
+        max_workers = len(agent_list)
+
+    logger.info(f"Starting parallel execution of {len(agent_list)} agents: {[name for _, name in agent_list]}")
+    overall_start = time.perf_counter()
+
+    # Wrapper to time individual agent execution
+    def timed_agent_run(agent, name):
+        start = time.perf_counter()
+        logger.info(f"[{name}] Started execution")
+        result = agent.run(state)
+        elapsed = time.perf_counter() - start
+        logger.info(f"[{name}] Completed in {elapsed:.2f}s")
+        return result
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all agents for parallel execution
+        futures = {
+            executor.submit(timed_agent_run, agent, name): name
+            for agent, name in agent_list
+        }
+
+        # Collect results
+        merged_results = {}
+        for future in futures:
+            agent_name = futures[future]
+            try:
+                result = future.result()
+                merged_results.update(result)
+            except Exception as e:
+                logger.error(f"[{agent_name}] failed: {e}")
+                raise
+
+        overall_elapsed = time.perf_counter() - overall_start
+        logger.info(f"Parallel execution completed in {overall_elapsed:.2f}s total")
+
+        return merged_results
+
+
 # ------------------------------------------------------------------
 # Graph builder
 # ------------------------------------------------------------------
@@ -46,19 +102,41 @@ def build_marva_s3_graph(agents: dict):
 
     # Single-scope validation agents
     graph.add_node("atomicity", lambda s: agents["atomicity"].run(s))
-    graph.add_node("clarity", lambda s: agents["clarity"].run(s))
-    graph.add_node("completion_single", lambda s: agents["completion_single"].run(s))
+    # NOTE: clarity and completion_single now run in parallel via single_parallel_exec node
+    # graph.add_node("clarity", lambda s: agents["clarity"].run(s))
+    # graph.add_node("completion_single", lambda s: agents["completion_single"].run(s))
 
     # Group-scope validation agents
-    graph.add_node("redundancy", lambda s: agents["redundancy"].run(s))
-    graph.add_node("completion_group", lambda s: agents["completion_group"].run(s))
-    graph.add_node("consistency_group", lambda s: agents["consistency_group"].run(s))
+    # NOTE: redundancy, completion_group, and consistency_group now run in parallel via group_parallel_exec node
+    # graph.add_node("redundancy", lambda s: agents["redundancy"].run(s))
+    # graph.add_node("completion_group", lambda s: agents["completion_group"].run(s))
+    # graph.add_node("consistency_group", lambda s: agents["consistency_group"].run(s))
 
     # Control / synchronization nodes
     graph.add_node("single_parallel", single_parallel_node)
     graph.add_node("group_parallel", group_parallel_node)
-    graph.add_node("join_single", join_node)
-    graph.add_node("join_group", join_node)
+    # NOTE: join nodes replaced by parallel execution nodes
+    # graph.add_node("join_single", join_node)
+    # graph.add_node("join_group", join_node)
+
+    # Parallel execution nodes
+    def single_parallel_execution(state: MARVAState):
+        agent_list = [
+            (agents["clarity"], "clarity"),
+            (agents["completion_single"], "completion_single")
+        ]
+        return execute_parallel_agents(state, agent_list, max_workers=2)
+
+    def group_parallel_execution(state: MARVAState):
+        agent_list = [
+            (agents["redundancy"], "redundancy"),
+            (agents["completion_group"], "completion_group"),
+            (agents["consistency_group"], "consistency_group")
+        ]
+        return execute_parallel_agents(state, agent_list, max_workers=3)
+
+    graph.add_node("single_parallel_exec", single_parallel_execution)
+    graph.add_node("group_parallel_exec", group_parallel_execution)
 
     # Decision agent
     graph.add_node("decision", lambda s: agents["decision"].run(s))
@@ -111,27 +189,17 @@ def build_marva_s3_graph(agents: dict):
     # Single-scope parallel validation
     # -------------------------------------------------
 
-    graph.add_edge("single_parallel", "clarity")
-    graph.add_edge("single_parallel", "completion_single")
-
-    graph.add_edge("clarity", "join_single")
-    graph.add_edge("completion_single", "join_single")
-
-    graph.add_edge("join_single", "decision")
+    # Parallel execution of clarity and completion_single
+    graph.add_edge("single_parallel", "single_parallel_exec")
+    graph.add_edge("single_parallel_exec", "decision")
 
     # -------------------------------------------------
     # Group-scope parallel validation
     # -------------------------------------------------
 
-    graph.add_edge("group_parallel", "redundancy")
-    graph.add_edge("group_parallel", "completion_group")
-    graph.add_edge("group_parallel", "consistency_group")
-
-    graph.add_edge("redundancy", "join_group")
-    graph.add_edge("completion_group", "join_group")
-    graph.add_edge("consistency_group", "join_group")
-
-    graph.add_edge("join_group", "decision")
+    # Parallel execution of redundancy, completion_group, and consistency_group
+    graph.add_edge("group_parallel", "group_parallel_exec")
+    graph.add_edge("group_parallel_exec", "decision")
 
     # -------------------------------------------------
     # End
