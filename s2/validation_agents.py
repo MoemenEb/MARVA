@@ -16,16 +16,16 @@ class ValidatorAgent:
 
     def build_prompt(self):
         self.single_prompts = {
-            "atomicity": load_prompt("atomicity"),
-            "clarity": load_prompt("clarity"),
-            "completion": load_prompt("completion_single"),
+            "atomicity": load_prompt("s2/atomicity"),
+            "clarity": load_prompt("s2/clarity"),
+            "completion": load_prompt("s2/completion_single"),
         }
         self.group_prompts = {
-           "completion": load_prompt("completion_group"),
-            "consistency": load_prompt("consistency_group"),
-            "redundancy": load_prompt("redundancy"), 
+           "completion": load_prompt("s2/completion_group"),
+            "consistency": load_prompt("s2/consistency_group"),
+            "redundancy": load_prompt("s2/redundancy"), 
         }
-        self.summary_prompt = load_prompt("s2_vdp")
+        self.summary_prompt = load_prompt("s2/s2_vdp")
 
 
     def run(self, mode:str, requirement_set:RequirementSet):
