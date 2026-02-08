@@ -13,17 +13,18 @@ from s3.agents.redundancy_agent import RedundancyAgent
 
 def build_agents():
     # -------------------------------------------------
-    # Single shared LLM for all agents
+    # Single shared LLM client for all agents
     # -------------------------------------------------
     cfg = load_config()
-    def create_agent_llm():
-        return LLMClient(
-            host=cfg["model"]["host"],
-            model=cfg["model"]["model_name"],
-            temperature=cfg["model"]["temperature"],
-            timeout=cfg["global"]["timeout_seconds"],
-            max_retries=cfg["global"]["max_retries"],
-        )
+
+    # Create ONE shared LLM client instance (thread-safe)
+    shared_llm = LLMClient(
+        host=cfg["model"]["host"],
+        model=cfg["model"]["model_name"],
+        temperature=cfg["model"]["temperature"],
+        timeout=cfg["global"]["timeout_seconds"],
+        max_retries=cfg["global"]["max_retries"],
+    )
 
     # -------------------------------------------------
     # Load prompts
@@ -42,13 +43,14 @@ def build_agents():
         "group": load_prompt("consistency_group"),
     }
 
+    # Pass the SAME shared_llm instance to all agents
     return {
-        "atomicity": AtomicityAgent(llm=create_agent_llm(), prompts=atomicity_prompts),
-        "clarity": ClarityAgent(llm=create_agent_llm(), prompt=load_prompt("clarity")),
-        "completion_single": CompletionAgent(llm=create_agent_llm(), prompts=completion_prompts),
-        "completion_group": CompletionAgent(llm=create_agent_llm(), prompts=completion_prompts),
-        "consistency_single": ConsistencyAgent(llm=create_agent_llm(), prompts=consistency_prompts),
-        "consistency_group": ConsistencyAgent(llm=create_agent_llm(), prompts=consistency_prompts),
-        "redundancy": RedundancyAgent(llm=create_agent_llm(), prompt=load_prompt("redundancy")),
-        "decision": DecisionAgent(llm=create_agent_llm(), prompt=load_prompt("recommend")),
+        "atomicity": AtomicityAgent(llm=shared_llm, prompts=atomicity_prompts),
+        "clarity": ClarityAgent(llm=shared_llm, prompt=load_prompt("clarity")),
+        "completion_single": CompletionAgent(llm=shared_llm, prompts=completion_prompts),
+        "completion_group": CompletionAgent(llm=shared_llm, prompts=completion_prompts),
+        "consistency_single": ConsistencyAgent(llm=shared_llm, prompts=consistency_prompts),
+        "consistency_group": ConsistencyAgent(llm=shared_llm, prompts=consistency_prompts),
+        "redundancy": RedundancyAgent(llm=shared_llm, prompt=load_prompt("redundancy")),
+        "decision": DecisionAgent(llm=shared_llm, prompt=load_prompt("recommend")),
     }
