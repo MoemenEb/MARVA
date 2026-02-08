@@ -17,7 +17,10 @@ class AtomicityAgent(BaseValidationAgent):
             "{{REQUIREMENT}}", requirement_text
         )
 
-        initial_raw = self.llm.generate(initial_prompt)["text"]
+        response = self.llm.generate(initial_prompt)
+        if response["execution_status"] != "SUCCESS":
+            return {"atomicity": AgentResult(agent="atomicity", status="FLAG", issues=[])}
+        initial_raw = response["text"]
 
         # -------------------------------------------------
         # Step 2 — Normalize output

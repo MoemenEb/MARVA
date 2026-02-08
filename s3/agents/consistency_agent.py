@@ -11,8 +11,10 @@ class ConsistencyAgent(BaseValidationAgent):
         mode = input_data["mode"]
 
         prompt, output_key = self._build_prompt(input_data, mode)
-        raw = self.llm.generate(prompt)["text"]
-        result = extract_json_block(raw)
+        response = self.llm.generate(prompt)
+        if response["execution_status"] != "SUCCESS":
+            return {output_key: AgentResult(agent=output_key, status="FLAG", issues=[])}
+        result = extract_json_block(response["text"])
 
         return {
             output_key: AgentResult(

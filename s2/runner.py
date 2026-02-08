@@ -5,6 +5,7 @@ from pathlib import Path
 import time
 
 from common.llm_client import LLMClient
+from common.config import load_config
 from s2.validation_agents import ValidatorAgent
 from utils.dataset_loader import load_dataset
 from common.logging.setup import setup_logging
@@ -32,9 +33,13 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
     # Init LLM + agent
     # -----------------------------
+    cfg = load_config()
     llm = LLMClient(
-        host="http://localhost:11434",
-        model="qwen3:1.7b",
+        host=cfg["model"]["host"],
+        model=cfg["model"]["model_name"],
+        temperature=cfg["model"]["temperature"],
+        timeout=cfg["global"]["timeout_seconds"],
+        max_retries=cfg["global"]["max_retries"],
     )
 
     agents = ValidatorAgent(llm)

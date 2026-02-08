@@ -64,6 +64,9 @@ class ValidatorAgent:
 
     def llm_run(self,prompt:str):
         response = self.llm.generate(prompt)
+        if response["execution_status"] != "SUCCESS":
+            self.logger.warning(f"LLM call failed: {response['execution_status']} - {response.get('error')}")
+            return {"decision": "FLAG", "issues": []}
         return extract_json_block(response["text"])
     
     def save_agent_result(self, validation, json_result, validation_list):

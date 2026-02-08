@@ -1,6 +1,7 @@
 from pathlib import Path
 
-PROMPT_DIR = Path("prompts")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROMPT_DIR = PROJECT_ROOT / "prompts"
 
 def load_prompt(name: str) -> str:
     path = PROMPT_DIR / f"{name}.txt"
