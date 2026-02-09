@@ -1,0 +1,24 @@
+id,requirement,redundancy,consistency,completion,NOTES
+G7,The product shall be able support 1000 simultaneous users.',,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G7,The system shall be used within the specifications defined by the computers used by the Program Administrators/Nursing Staff Members.',,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G7,The leads washing functionality will insert all leads captured by the web service.,,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G7,Program Administrators/Nursing Staff Members are the only people who shall have access to clinical site details.',,,,Base requirement
+G7,The Disputes application shall ensure that only authorized users are allowed to logon to the application.',,,,Base requirement
+G7,The Disputes applications shall interface with the Merchant Information Database.  The Merchant Information Database provides detailed information with regard to the merchant. All merchant detail information shall be obtained from the Merchant Information Database.',,,,Base requirement
+G7,The number of mistakes noted by the students shall be decreased by 50\% in the first year.',,,,Base requirement
+G7,"When the hit results in sinking a ship, the product shall notify the players that the ship was sunk.",,,,Base requirement
+G7,"At the start of each turn, the product shall notify each player of his or her status.",,,,Base requirement
+G7,The product shall have a consistent color scheme and fonts.',,,,Base requirement
+G7,The product shall display a map of the company building showing conference room locations.,,,,Base requirement
+G7,All screens created as part of the Disputes application must comply with corporate standards for interface creation.',,,,Base requirement
+G7,The System shall generate Inventory Quantity Adjustment document based on product daily sales data and product formulas.,,,,Base requirement
+G7,The product shall produce search results in an acceptable time',,,,Base requirement
+G7,"Daily usage statistics should be logged, and accessible by the administrator.",,,,Base requirement
+G7,The system shall validate user credentials before granting access.,G7-R142,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G7,The system shall verify user login information prior to allowing entry.,G7-R141,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G7,The application shall log all error messages to the system log file.,G7-R144,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G7,The application shall record error events in the log file.,G7-R143,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G7,The system shall display confirmation message after successful save operation.,G7-R146,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement
+G7,"Upon successful save, the system shall show a confirmation to the user.",G7-R145,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement
+G7,The system response time shall not exceed 2 seconds.,,G7-R148,,CONFLICT: Incompatible performance requirements - 2 sec vs. 5 sec response time
+G7,The system shall respond to user requests within 5 seconds maximum.,,G7-R147,,CONFLICT: Incompatible performance requirements - 2 sec vs. 5 sec response time

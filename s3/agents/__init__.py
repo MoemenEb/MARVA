@@ -2,7 +2,6 @@
 
 import logging
 import time
-from common.llm_client import LLMClient
 from common.cached_ollama_client import CachedOllamaClient
 from common.config import load_config
 from common.prompt_loader import load_prompt
@@ -16,23 +15,47 @@ from s3.agents.redundancy_agent import RedundancyAgent
 logger = logging.getLogger("marva.s3.agents")
 
 
-def build_agents():
-    overall_start = time.perf_counter()
-    logger.info("Building all S3 agents with cached system prompts")
+# LLM client names needed per mode (decision is always included)
+_MODE_LLM_CLIENTS = {
+    "single": ["atomicity", "clarity", "completion_single", "decision"],
+    "group":  ["redundancy", "consistency", "completion_group", "decision"],
+}
 
-    # -------------------------------------------------
-    # CachedOllamaClient instances for all agents with system prompt caching
-    # System prompt sent ONCE during initialization, cached for all calls
-    # -------------------------------------------------
+
+def _build_mode_agents(mode, llm_clients, task_prompt):
+    """Build only the agent instances required for the given mode."""
+    decision_prompts = {"task": load_prompt("decision_task", category="s3/task_prompts")}
+    shared = {"task": task_prompt}
+
+    if mode == "single":
+        return {
+            "atomicity": AtomicityAgent(llm=llm_clients["atomicity"], prompts=shared),
+            "clarity": ClarityAgent(llm=llm_clients["clarity"], prompts=shared),
+            "completion_single": CompletionAgent(llm=llm_clients["completion_single"], prompts=shared),
+            "decision": DecisionAgent(llm=llm_clients["decision"], prompts=decision_prompts),
+        }
+
+    return {
+        "redundancy": RedundancyAgent(llm=llm_clients["redundancy"], prompts=shared),
+        "consistency_group": ConsistencyAgent(llm=llm_clients["consistency"], prompts=shared),
+        "completion_group": CompletionAgent(llm=llm_clients["completion_group"], prompts=shared),
+        "decision": DecisionAgent(llm=llm_clients["decision"], prompts=decision_prompts),
+    }
+
+
+def build_agents(mode: str):
+    overall_start = time.perf_counter()
+    logger.info("Building S3 agents for mode='%s'", mode)
+
     cfg = load_config()
 
-    agent_names = [
-        "atomicity", "clarity", "redundancy", "consistency",
-        "completion_single", "completion_group", "decision"
-    ]
+    # -------------------------------------------------
+    # Only init LLM clients needed for this mode
+    # -------------------------------------------------
+    client_names = _MODE_LLM_CLIENTS[mode]
     llm_clients = {}
 
-    for name in agent_names:
+    for name in client_names:
         t0 = time.perf_counter()
         logger.info("Initializing cached LLM client for '%s'", name)
         llm_clients[name] = CachedOllamaClient(
@@ -40,53 +63,18 @@ def build_agents():
             base_url=cfg["model"]["host"],
             system_prompt=load_prompt(name, category="s3/system_prompts"),
             temperature=cfg["model"]["temperature"],
+            num_predict=cfg["model"].get("max_tokens", 1024),
             timeout=cfg["global"]["timeout_seconds"],
             max_retries=cfg["global"]["max_retries"],
         )
         logger.info("Cached LLM client '%s' ready in %.2fs", name, time.perf_counter() - t0)
 
     # -------------------------------------------------
-    # Load prompts
+    # Build mode-specific agents
     # -------------------------------------------------
-    # Shared task prompt for validation agents
     shared_task_prompt = load_prompt("shared_task", category="s3/task_prompts")
-
-    atomicity_prompts = {
-        "task": shared_task_prompt,
-    }
-
-    clarity_prompts = {
-        "task": shared_task_prompt,
-    }
-
-    redundancy_prompts = {
-        "task": shared_task_prompt,
-    }
-
-    consistency_prompts = {
-        "task": shared_task_prompt,
-    }
-
-    completion_prompts = {
-        "task": shared_task_prompt,
-    }
-
-    decision_prompts = {
-        "task": load_prompt("decision_task", category="s3/task_prompts"),
-    }
-
-    # All agents now use CachedOllamaClient with system prompt caching
-    agents = {
-        "atomicity": AtomicityAgent(llm=llm_clients["atomicity"], prompts=atomicity_prompts),
-        "clarity": ClarityAgent(llm=llm_clients["clarity"], prompts=clarity_prompts),
-        "redundancy": RedundancyAgent(llm=llm_clients["redundancy"], prompts=redundancy_prompts),
-        "consistency_single": ConsistencyAgent(llm=llm_clients["consistency"], prompts=consistency_prompts),
-        "consistency_group": ConsistencyAgent(llm=llm_clients["consistency"], prompts=consistency_prompts),
-        "completion_single": CompletionAgent(llm=llm_clients["completion_single"], prompts=completion_prompts),
-        "completion_group": CompletionAgent(llm=llm_clients["completion_group"], prompts=completion_prompts),
-        "decision": DecisionAgent(llm=llm_clients["decision"], prompts=decision_prompts),
-    }
+    agents = _build_mode_agents(mode, llm_clients, shared_task_prompt)
 
     overall_elapsed = time.perf_counter() - overall_start
-    logger.info("All %d agents built in %.2fs", len(agents), overall_elapsed)
+    logger.info("Built %d agents for mode='%s' in %.2fs", len(agents), mode, overall_elapsed)
     return agents

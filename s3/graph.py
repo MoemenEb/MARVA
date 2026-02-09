@@ -8,6 +8,17 @@ import logging
 logger = logging.getLogger("marva.s3.graph")
 
 
+def _get_agent(agents: dict, key: str):
+    """Get agent by key with a clear error for uninitialized agents."""
+    agent = agents.get(key)
+    if agent is None:
+        raise RuntimeError(
+            f"Agent '{key}' was not initialized for the current mode. "
+            f"Available agents: {list(agents.keys())}"
+        )
+    return agent
+
+
 # ------------------------------------------------------------------
 # Control-only nodes (no state writes)
 # ------------------------------------------------------------------
@@ -107,7 +118,7 @@ def build_marva_s3_graph(agents: dict):
     graph.add_node("orchestrator", orchestrator_agent)
 
     # Single-scope validation agents
-    graph.add_node("atomicity", lambda s: agents["atomicity"].run(s))
+    graph.add_node("atomicity", lambda s: _get_agent(agents, "atomicity").run(s))
 
     # Control / synchronization nodes
     graph.add_node("single_parallel", single_parallel_node)
@@ -116,16 +127,16 @@ def build_marva_s3_graph(agents: dict):
     # Parallel execution nodes
     def single_parallel_execution(state: MARVAState):
         agent_list = [
-            (agents["clarity"], "clarity"),
-            (agents["completion_single"], "completion_single")
+            (_get_agent(agents, "clarity"), "clarity"),
+            (_get_agent(agents, "completion_single"), "completion_single")
         ]
         return execute_parallel_agents(state, agent_list, max_workers=2)
 
     def group_parallel_execution(state: MARVAState):
         agent_list = [
-            (agents["redundancy"], "redundancy"),
-            (agents["completion_group"], "completion_group"),
-            (agents["consistency_group"], "consistency_group")
+            (_get_agent(agents, "redundancy"), "redundancy"),
+            (_get_agent(agents, "completion_group"), "completion_group"),
+            (_get_agent(agents, "consistency_group"), "consistency_group")
         ]
         return execute_parallel_agents(state, agent_list, max_workers=3)
 
@@ -133,7 +144,7 @@ def build_marva_s3_graph(agents: dict):
     graph.add_node("group_parallel_exec", group_parallel_execution)
 
     # Decision agent
-    graph.add_node("decision", lambda s: agents["decision"].run(s))
+    graph.add_node("decision", lambda s: _get_agent(agents, "decision").run(s))
 
     # -------------------------------------------------
     # Entry point

@@ -1,0 +1,22 @@
+id,requirement,redundancy,consistency,completion,NOTES
+G1,"For each class within a sequence for a cohort, Program Administrators and Nursing Staff Members shall be able to specify which quarter that class will be offered.",,,,Base requirement
+G1,The system shall retain the available recycled parts and suppliers returned from the search.,,,,Base requirement
+G1,The estimator shall search by zipcode with a radius of 30 miles if no parts are found for the preferred parts suppliers,,,,Base requirement
+G1,"All streaming movie sales will be logged in the database, and accessible by the administrator.",,,,Base requirement
+G1,"A clinical class shall specify the course name, lecture room requirements, clinical site needs, lecture instructor needs, and clinical lab instructor needs.",,,,Base requirement
+G1,The System shall generate Inventory Quantity Adjustment document automatically when daily Product Sales data is available.,,,,Base requirement
+G1,"For any systematic (non-user initiated) action that occurs on a case such as the disputes aging process, a case activity will be generated. Upon the next logon the user that initiated the dispute case must be notified that a systematic action has occurred on the dispute case.",,,,Base requirement
+G1,Website shall allow customers to add their own movie review for a selected movie.,,,,Base requirement
+G1,"The Disputes System must provide a confirmation to the user upon the creation of ticket retrieval request that contains the following information; the dispute case number, the type of retrieval requested (copy, original or portfolio), and the date that the merchant response is due.",,,,Base requirement
+G1,The adjuster shall be able to override the preferred repair facitlity on the estimate assignment.,,,,Base requirement
+G1,The audit report shall be displayed to the user.,,,,Base requirement
+G1,The realtor shall be able to retrieve a map showing property locations for a specified area,,,,Base requirement
+G1,The ratings shall include categories for attempted use of recycled parts and actual use of recycled parts,,,,Base requirement
+G1,A cohort shall be associated to one Program of Study offered by the department.,,,,Base requirement
+G1,The system shall allow a real estate agent to query MLS information,,,,Base requirement
+G1,The system shall validate user credentials before granting access.,G1-R017,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G1,The system shall verify user login information prior to allowing entry.,G1-R016,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G1,The application shall log all error messages to the system log file.,G1-R019,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G1,The application shall record error events in the log file.,G1-R018,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G1,The system shall display confirmation message after successful save operation.,G1-R021,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement
+G1,"Upon successful save, the system shall show a confirmation to the user.",G1-R020,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement

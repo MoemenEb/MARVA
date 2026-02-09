@@ -1,8 +1,0 @@
-id,requirement,Atomic,Clear,Complete,Consistent
-synt-001,User shall be able to print and export the printout to PDF,f,y,y,y
-synt-002,Response time for common edit operations (change attributes and structure) shall be very fast as per regulations,y,n,n,y
-synt-003,Scrolling requirements table shall be smooth,y,n,y,y
-synt-004,User shall be able to search requirements with an attribute matching a string keyword by means of FTS.,y,n,y,y
-synt-005,"The supplier shall propose materials, which are adequate for mechanical load and are heavy weighted to ease fly.",y,y,y,n
-synt-006,The display shall have two regions: left 2/3 of the display is graphical.,y,n,n,y
-synt-007,"The system shall be able to display a printable summary for individual clinical sites, which will include information on labs being held at that site for the given quarter (Clinical site, general information on labs held at that location, dates and times of all labs held there).",y,y,y,y

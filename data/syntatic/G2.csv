@@ -1,0 +1,19 @@
+id,requirement,redundancy,consistency,completion,NOTES
+G2,"The notification of the game ending will include the reason the game is ended (i.e., a player has won the game or a player has ended the game).",,,,Base requirement
+G2,The product shall be capable of handling the existing 1000 users. This number is expected to grow 5 times within the next year.',,,,Base requirement
+G2,The product shall be available during normal business hours. As long as the user has access to the client PC  the system will be available 99\% of the time during the first six months of operation.',,,,Base requirement
+G2,The product shall operate in offline mode whenever internet connection is unavailable.',,,,Base requirement
+G2,A database management system such as Oracle  DB2  MySql or HSQL will need to be integrated with the product.',,,,Base requirement
+G2,"If the shot was marked as a hit, the product shall allow the offensive player to define a shot.",,,,Base requirement
+G2,"For each turn, the product shall allow the offensive player to define a shot.",,,,Base requirement
+G2,The product shall continue to assign turns until the game is ended.,,,,Base requirement
+G2,The product is expected to run on Windows CE and Palm operating systems.',,,,Base requirement
+G2,The system shall help the user avoid making mistakes while scheduling classes and clinicals for the nursing students.',,,,Base requirement
+G2,The product shall comply with corporate User Interface Guidelines',,,,Base requirement
+G2,system shall be able to handle all of the user requests/usage during business hours.',,,,Base requirement
+G2,The system shall automatically log out users after 15 minutes of inactivity.,,G2-R035,,CONFLICT: Contradictory timeout policies - 15-min auto-logout vs. indefinite session
+G2,The system shall maintain user sessions indefinitely until manual logout.,,G2-R034,,CONFLICT: Contradictory timeout policies - 15-min auto-logout vs. indefinite session
+G2,All passwords must be exactly 8 characters in length.,,G2-R037,,CONFLICT: Incompatible password length constraints - fixed 8 chars vs. 12-20 range
+G2,The system shall accept passwords between 12 and 20 characters.,,G2-R036,,CONFLICT: Incompatible password length constraints - fixed 8 chars vs. 12-20 range
+G2,The system shall encrypt all data at rest using AES-256 encryption.,,G2-R039,,CONFLICT: Contradictory encryption policies - mandatory AES-256 vs. no encryption
+G2,The system shall not apply encryption to stored data to optimize performance.,,G2-R038,,CONFLICT: Contradictory encryption policies - mandatory AES-256 vs. no encryption

@@ -9,6 +9,7 @@ Compatible with the agent architecture and can be used as a drop-in replacement
 for ChatOllama or LLMClient in agent initialization.
 """
 
+import re
 import requests
 import time
 import logging
@@ -39,12 +40,15 @@ class CachedOllamaClient:
         # System prompt tokens are cached, only user prompt is processed
     """
 
+    _THINK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
+
     def __init__(
         self,
         model: str,
         base_url: str,
         system_prompt: str,
         temperature: float = 0.0,
+        num_predict: int = 1024,
         timeout: int = 60,
         max_retries: int = 3
     ):
@@ -56,12 +60,14 @@ class CachedOllamaClient:
             base_url: Ollama API base URL (e.g., "http://localhost:11434")
             system_prompt: System prompt to cache (sent once)
             temperature: LLM temperature setting
+            num_predict: Maximum tokens to generate per call
             timeout: Request timeout in seconds
             max_retries: Maximum retry attempts on failure
         """
         self.model = model
         self.base_url = base_url
         self.temperature = temperature
+        self.num_predict = num_predict
         self.timeout = timeout
         self.max_retries = max_retries
         self.system_prompt = system_prompt
@@ -86,7 +92,8 @@ class CachedOllamaClient:
             "prompt": self.system_prompt,
             "stream": False,
             "options": {
-                "temperature": self.temperature
+                "temperature": self.temperature,
+                "num_predict": 1,  # minimize wasted generation, we only need the context
             }
         }
 
@@ -135,7 +142,8 @@ class CachedOllamaClient:
             "context": self.system_context,  # Reuse cached context
             "stream": False,
             "options": {
-                "temperature": self.temperature
+                "temperature": self.temperature,
+                "num_predict": self.num_predict,
             }
         }
 
@@ -151,6 +159,8 @@ class CachedOllamaClient:
 
                 latency_ms = int((time.time() - start_time) * 1000)
                 text = result.get("response", "")
+                # Strip thinking blocks (e.g. qwen3 <think>...</think>)
+                text = self._THINK_RE.sub("", text).strip()
                 logger.debug("Cached generate response (latency=%dms, response_len=%d, attempt=%d)", latency_ms, len(text), attempt)
 
                 return {

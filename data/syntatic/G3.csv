@@ -1,0 +1,25 @@
+id,requirement,redundancy,consistency,completion,NOTES
+G3,The system shall create new user accounts.,,,Missing: READ (view user details) and UPDATE (modify user information) operations for complete CRUD,INCOMPLETE SET: Missing: READ (view user details) and UPDATE (modify user information) operations for complete CRUD
+G3,The system shall delete user accounts.,,,Missing: READ (view user details) and UPDATE (modify user information) operations for complete CRUD,INCOMPLETE SET: Missing: READ (view user details) and UPDATE (modify user information) operations for complete CRUD
+G3,The system shall accept order submission from customers.,,,"Missing: payment processing, inventory verification, shipping notification, and order status updates for complete workflow","INCOMPLETE SET: Missing: payment processing, inventory verification, shipping notification, and order status updates for complete workflow"
+G3,The system shall send order confirmation email.,,,"Missing: payment processing, inventory verification, shipping notification, and order status updates for complete workflow","INCOMPLETE SET: Missing: payment processing, inventory verification, shipping notification, and order status updates for complete workflow"
+G3,The system shall authenticate users via username and password.,,,"Missing: role-based authorization, session timeout handling, password reset/recovery mechanism for complete security","INCOMPLETE SET: Missing: role-based authorization, session timeout handling, password reset/recovery mechanism for complete security"
+G3,The system shall generate monthly sales reports.,,,"Missing: report format specification (PDF/Excel), delivery method (email/download), recipient list, and scheduling mechanism","INCOMPLETE SET: Missing: report format specification (PDF/Excel), delivery method (email/download), recipient list, and scheduling mechanism"
+G3,The System shall utilize currently owned computer equipment.',,,,Base requirement
+G3,Only authorized user shall access the RFS system. ONLY users that exist in the UAS system  with the RFS system assigned to their role(s)  shall access the RFS system and use it.',,,,Base requirement
+G3,The product shall be available 99\% of the time. Rationale: To avoid service interruption during busiest customer service response periods. The product shall be available 99.99\% of the time for regular business days.',,,,Base requirement
+G3,The product shall process messages within 2 seconds.The product shall have a maximum message processing time of 2 seconds',,,,Base requirement
+G3,Only managers are able to perform search queries for reservations by user.  100\% of all search queries for reservations by user shall be from logons of only management logons.',,,,Base requirement
+G3,The System shall not require additional third party licenses resulting in royalty fees.',,,,Base requirement
+G3,The product shall give users feedback when necessary. 80\% of the users surveyed report that the product accurately confirms their actions.',,,,Base requirement
+G3,The interface shall have a simple look. In the interface and usability survey  90\% of beta testers must report that the interface is adequately simple.',,,,Base requirement
+G3,Only authorized personnel can access customer records in the database.',,,,Base requirement
+G3,The product shall be able to display calendar dates and times according to the user's locale.  90\% of survey respondents from each target market country will find that the date and time formatting of the product is correct.',,,,Base requirement
+G3,The Commissioner will be the only authorized user per league to adjust league settings.',,,,Base requirement
+G3,Changes to revenue and expense formulae must be applied to the RFS system  every year  prior to the budgeting process start. Revenue and expense formulae will be updated within one week of their receipt  after which 2 weeks will be allotted to testing of the budget calculations  to be conducted jointly by the project development team and PCG Finance.',,,,Base requirement
+G3,The system shall be easy to learn by callers and supervisors. Callers and supervisors shall learn how to use the system within 10 minutes.',,,,Base requirement
+G3,"System shall let customers register on the website as a ""pay as you go"" user in under 5 minutes.'",,,,Base requirement
+G3,The System shall be able to automatically backup business data and restore them on demand.',,,,Base requirement
+G3,98\% of the user workstations shall meet the minimum software requirements prior to implementation: Microsoft Internet Explorer 5.0. Microsoft .NET Framework 1.1. Microsoft Internet Explorer Web Controls',,,,Base requirement
+G3,The product shall allow for intuitive searching of available conference rooms.',,,,Base requirement
+G3,The product shall be platform independent.The product shall enable access to any type of development environment and platform.',,,,Base requirement
