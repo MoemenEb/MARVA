@@ -1,3 +1,4 @@
+import time
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
 from entity.agent import AgentResult
@@ -33,10 +34,19 @@ class DecisionAgent(BaseValidationAgent):
     # -------------------------------------------------
     def run(self, state: dict) -> dict:
         mode = state["mode"]
+        overall_start = time.perf_counter()
+        self.logger.debug("Decision agent started (mode=%s)", mode)
 
         validations = self._collect_validations(state, mode)
+        self.logger.debug("Collected %d validations: %s", len(validations), [v.get("agent") for v in validations])
+
         final_decision = self._final_decision(validations)
+        self.logger.info("Final decision: %s", final_decision)
+
+        t0 = time.perf_counter()
         recommendations = self._recommendations(state, validations, mode)
+        rec_elapsed = time.perf_counter() - t0
+        self.logger.debug("Recommendations generated in %.2fs (%d items)", rec_elapsed, len(recommendations))
 
         # Update the entity directly
         if mode == "single":
@@ -49,6 +59,9 @@ class DecisionAgent(BaseValidationAgent):
             req_set.group_validations = validations
             req_set.final_decision = final_decision
             req_set.recommendations = recommendations
+
+        overall_elapsed = time.perf_counter() - overall_start
+        self.logger.debug("Decision agent completed in %.2fs", overall_elapsed)
 
         return {
             "decision": AgentResult(
@@ -73,6 +86,8 @@ class DecisionAgent(BaseValidationAgent):
         for key in keys:
             if key in state and isinstance(state[key], AgentResult):
                 validations.append(state[key].to_dict())
+            else:
+                self.logger.warning("Missing validation result for '%s'", key)
 
         return validations
 
@@ -109,6 +124,7 @@ class DecisionAgent(BaseValidationAgent):
         """
         issues = self._collect_issues(validations)
         if not issues:
+            self.logger.debug("No issues found — skipping recommendation generation")
             return []
 
         requirements_text = self._format_requirements(state, mode)
@@ -122,13 +138,19 @@ class DecisionAgent(BaseValidationAgent):
         )
 
         # Call LLM with ONLY task prompt (system context cached)
+        t0 = time.perf_counter()
         response = self.llm.generate(task_prompt)
+        llm_elapsed = time.perf_counter() - t0
+
         if response["execution_status"] != "SUCCESS":
+            self.logger.warning("Recommendation LLM call failed after %.2fs: %s", llm_elapsed, response.get("error"))
             return []
 
         # Extract and parse response
         parsed = extract_json_block(response["text"])
-        return parsed.get("recommendations", [])
+        recs = parsed.get("recommendations", [])
+        self.logger.debug("Generated %d recommendations (LLM %.2fs)", len(recs), llm_elapsed)
+        return recs
 
     # -------------------------------------------------
     # Helpers

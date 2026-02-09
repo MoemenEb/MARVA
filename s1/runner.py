@@ -24,12 +24,13 @@ def main(mode: str, scope: str, limit: int | None):
     setup_logging(run_id="s1_run_"+datetime.now().strftime('%Y%m%d'))
     init_s1_logger()
     logger = logging.getLogger(LOGGER)
-    logger.info(f"Starting S1 runner with mode={mode}, scope={scope}, limit={limit}")
-    
-    logger.info(f"Loading dataset {scope}")
-    requirement_set = load_dataset(scope, limit)
-    logger.info(f"Loaded {len(requirement_set.requirements)} requirements from dataset")
+    logger.info("Starting S1 runner (mode=%s, scope=%s, limit=%s)", mode, scope, limit)
 
+    t0 = time.perf_counter()
+    requirement_set = load_dataset(scope, limit)
+    logger.info("Loaded %d requirements from '%s' in %.2fs", len(requirement_set.requirements), scope, time.perf_counter() - t0)
+
+    t0 = time.perf_counter()
     cfg = load_config()
     llm = LLMClient(
         host=cfg["model"]["host"],
@@ -38,31 +39,31 @@ def main(mode: str, scope: str, limit: int | None):
         timeout=cfg["global"]["timeout_seconds"],
         max_retries=cfg["global"]["max_retries"],
     )
+    logger.debug("LLM client initialized in %.2fs", time.perf_counter() - t0)
 
     pipeline = S1Pipeline(llm)
     decision = Decision(
         framework=FRAMEWORK,
-        mode=mode  
+        mode=mode
     )
 
     start_time = time.perf_counter()
-    logger.info("Start S1 pipeline")
+    logger.info("Starting S1 pipeline execution")
     pipeline.run(requirement_set, mode)
-    logger.info("S1 pipeline finished")
-    logger.info("Saving results ...")
-    
+    pipeline_elapsed = time.perf_counter() - start_time
+    logger.info("S1 pipeline finished in %.2fs", pipeline_elapsed)
+
     dec = (
             [req.to_dict() for req in requirement_set.requirements]
             if mode == "single"
             else requirement_set.to_dict()
         )
-    
+
     decision.duration = int((time.perf_counter() - start_time))
     decision.decision = dec
-    
+
     output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
-    logger.info(f"S1 runner completed in {decision.duration} seconds")
-    logger.info(f"Validation summary is saved at: {DECISION_OUTPUT_PATH}/{output_dir}")
+    logger.info("S1 runner completed in %ds | output: %s/%s", decision.duration, DECISION_OUTPUT_PATH, output_dir)
 
 
 if __name__ == "__main__":

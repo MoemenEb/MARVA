@@ -1,6 +1,7 @@
 from common.llm_client import LLMClient
 from common.prompt_loader import load_prompt
 import logging
+import time
 
 from entity.requirement_set import RequirementSet
 from entity.agent import AgentResult
@@ -24,17 +25,20 @@ class S1Pipeline:
         self.agents = []
 
     def normalize_output(self, result:str):
-        self.logger.info(f"Normalizing output ")
+        self.logger.debug("Normalizing LLM output")
         if result["execution_status"] != "SUCCESS":
-            self.logger.warning(f"LLM call failed: {result['execution_status']} - {result.get('error')}")
+            self.logger.warning("LLM call failed: %s - %s", result['execution_status'], result.get('error'))
             return "FLAG", []
         json_result = extract_json_block(result["text"])
         self.save_agent_result(json_result["agents"])
         return json_result["status"], json_result["recommendations"]
-    
+
     def run(self, requirement_set:RequirementSet, mode:str):
         if mode == "single":
-            for requirement in requirement_set.requirements:
+            total = len(requirement_set.requirements)
+            for idx, requirement in enumerate(requirement_set.requirements, 1):
+                req_start = time.perf_counter()
+                self.logger.info("[%d/%d] Validating requirement '%s'", idx, total, requirement.id)
                 # prep prompt
                 prompt = self.single_prompt.replace("{{REQUIREMENT}}", requirement.text)
                 normalized_result = self.prompt_run(prompt)
@@ -42,7 +46,11 @@ class S1Pipeline:
                 requirement.final_decision,requirement.recommendation = normalized_result
                 age = AgentSet(self.agents)
                 requirement.single_validations = age.agents_list()
+                req_elapsed = time.perf_counter() - req_start
+                self.logger.info("[%d/%d] Requirement '%s' => %s (%.2fs)", idx, total, requirement.id, requirement.final_decision, req_elapsed)
         elif mode == "group":
+            self.logger.info("Running group validation for %d requirements", len(requirement_set.requirements))
+            group_start = time.perf_counter()
             # prep prompt
             prompt = self.group_prompt.replace("{{REQUIREMENT}}", requirement_set.join_requirements())
             normalized_result = self.prompt_run(prompt)
@@ -50,13 +58,16 @@ class S1Pipeline:
             requirement_set.final_decision, requirement_set.recommendations = normalized_result
             age = AgentSet(self.agents)
             requirement_set.group_validations = age.agents_list()
-    
-  
+            group_elapsed = time.perf_counter() - group_start
+            self.logger.info("Group validation => %s (%.2fs)", requirement_set.final_decision, group_elapsed)
+
+
     def prompt_run(self, prompt):
-        return self.normalize_output(
-            self.llm.generate(prompt)
-            )
-    
+        t0 = time.perf_counter()
+        result = self.llm.generate(prompt)
+        self.logger.debug("LLM call took %dms (status=%s)", result.get("latency_ms", 0), result.get("execution_status"))
+        return self.normalize_output(result)
+
     def save_agent_result(self, agents_json):
         self.agents.clear()
         for agent in agents_json:
@@ -65,3 +76,4 @@ class S1Pipeline:
                 status= agent["status"],
                 issues= agent["issues"]
             ))
+        self.logger.debug("Saved %d agent results: %s", len(self.agents), [a.agent for a in self.agents])

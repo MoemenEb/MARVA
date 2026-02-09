@@ -1,3 +1,4 @@
+import time
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
 from entity.agent import AgentResult
@@ -42,15 +43,19 @@ class AtomicityAgent(BaseValidationAgent):
             Dict with 'atomicity' key mapping to AgentResult
         """
         requirement_text = input_data["requirement"].text
+        self.logger.debug("Running atomicity validation")
 
         # Build task prompt with the specific requirement
         task_prompt = self.prompts["task"].replace("{{REQUIREMENT}}", requirement_text)
 
         # Call LLM with ONLY task prompt (system context cached)
+        t0 = time.perf_counter()
         response = self.llm.generate(task_prompt)
+        llm_elapsed = time.perf_counter() - t0
 
         # Handle execution status
         if response["execution_status"] != "SUCCESS":
+            self.logger.warning("Atomicity LLM call failed after %.2fs: %s", llm_elapsed, response.get("error"))
             return {
                 "atomicity": AgentResult(
                     agent="atomicity",
@@ -62,11 +67,14 @@ class AtomicityAgent(BaseValidationAgent):
         # Extract and parse response
         response_text = response["text"]
         result = extract_json_block(response_text)
+        status = result.get("decision", "FLAG")
+
+        self.logger.debug("Atomicity result: %s (LLM %.2fs, %dms reported)", status, llm_elapsed, response.get("latency_ms", 0))
 
         return {
             "atomicity": AgentResult(
                 agent="atomicity",
-                status=result.get("decision", "FLAG"),
+                status=status,
                 issues=result.get("issues", [])
             )
         }

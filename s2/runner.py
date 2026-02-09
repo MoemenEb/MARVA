@@ -22,17 +22,20 @@ def main(mode: str, scope: str, limit: int | None):
 
     setup_logging(run_id="s2_run_"+datetime.now().strftime('%Y%m%d'))
     init_s2_logger()
-    logger = logging.getLogger("marva.s2.runner_new")
+    logger = logging.getLogger("marva.s2.runner")
+    logger.info("Starting S2 runner (mode=%s, scope=%s, limit=%s)", mode, scope, limit)
+
     # -----------------------------
     # Load dataset
     # -----------------------------
-    logger.info(f"Loading dataset {scope}")
+    t0 = time.perf_counter()
     requirement_set = load_dataset(scope, limit)
-    logger.info(f"Loaded {len(requirement_set.requirements)} requirements from dataset")
+    logger.info("Loaded %d requirements from '%s' in %.2fs", len(requirement_set.requirements), scope, time.perf_counter() - t0)
 
     # -----------------------------
     # Init LLM + agent
     # -----------------------------
+    t0 = time.perf_counter()
     cfg = load_config()
     llm = LLMClient(
         host=cfg["model"]["host"],
@@ -41,9 +44,10 @@ def main(mode: str, scope: str, limit: int | None):
         timeout=cfg["global"]["timeout_seconds"],
         max_retries=cfg["global"]["max_retries"],
     )
+    logger.debug("LLM client initialized in %.2fs", time.perf_counter() - t0)
 
     agents = ValidatorAgent(llm)
-    
+
     decision = Decision(
         framework= "S2 Validation Agent v1.0",
         mode=mode
@@ -54,20 +58,18 @@ def main(mode: str, scope: str, limit: int | None):
     # -----------------------------
 
     start_time = time.perf_counter()
-    
-    logger.info("Start S2 pipeline")
+
+    logger.info("Starting S2 pipeline execution")
     agents.run(mode=mode, requirement_set=requirement_set)
 
-    decision.duration = int((time.perf_counter() - start_time))
-    logger.info("S2 pipeline finished")
-    
-    logger.info("Saving results ...")
-    decision.set_decision(requirement_set)
-    
-    output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
+    pipeline_elapsed = time.perf_counter() - start_time
+    decision.duration = int(pipeline_elapsed)
+    logger.info("S2 pipeline finished in %.2fs", pipeline_elapsed)
 
-    logger.info(f"S2 runner completed in {decision.duration} seconds")
-    logger.info(f"Validation summary is saved at: {DECISION_OUTPUT_PATH}/{output_dir}")
+    decision.set_decision(requirement_set)
+
+    output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
+    logger.info("S2 runner completed in %ds | output: %s/%s", decision.duration, DECISION_OUTPUT_PATH, output_dir)
 
 
 
