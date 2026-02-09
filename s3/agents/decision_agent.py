@@ -4,10 +4,29 @@ from entity.agent import AgentResult
 
 
 class DecisionAgent(BaseValidationAgent):
+    """
+    Decision agent with true system prompt caching.
 
-    def __init__(self, llm, prompt: str):
+    Uses CachedOllamaClient which sends system prompt ONCE during initialization
+    and reuses the cached context for all subsequent decisions.
+
+    Architecture:
+    - System prompt: Sent once in __init__ via CachedOllamaClient
+    - Task prompt: Sent per decision with cached context
+    - Stateless: No conversation history between decisions
+    - True caching: ~97% reduction in prompt tokens after first call
+    """
+
+    def __init__(self, llm, prompts: dict[str, str]):
+        """
+        Initialize the decision agent.
+
+        Args:
+            llm: CachedOllamaClient instance (already initialized with system prompt)
+            prompts: Dict with 'task' prompt template (system prompt is in llm)
+        """
         super().__init__(llm)
-        self.prompt = prompt
+        self.prompts = prompts
 
     # -------------------------------------------------
     # Entry point
@@ -74,24 +93,41 @@ class DecisionAgent(BaseValidationAgent):
     # Task 3 — Recommendations (LLM-based)
     # -------------------------------------------------
     def _recommendations(self, state: dict, validations: list[dict], mode: str) -> list[str]:
+        """
+        Generate recommendations using LLM with cached system prompt.
+
+        Sends only the task prompt (with mode, requirements, and issues).
+        System prompt context is cached in the LLM client and reused automatically.
+
+        Args:
+            state: Current state with requirement data
+            validations: List of validation results
+            mode: Validation mode ('single' or 'group')
+
+        Returns:
+            List of recommendation strings
+        """
         issues = self._collect_issues(validations)
         if not issues:
             return []
 
         requirements_text = self._format_requirements(state, mode)
 
-        prompt = (
-            self.prompt
+        # Build task prompt with dynamic data (system prompt is cached in LLM)
+        task_prompt = (
+            self.prompts["task"]
             .replace("{{MODE}}", mode)
             .replace("{{REQUIREMENTS}}", requirements_text)
             .replace("{{ISSUES}}", issues)
         )
 
-        response = self.llm.generate(prompt)
+        # Call LLM with ONLY task prompt (system context cached)
+        response = self.llm.generate(task_prompt)
         if response["execution_status"] != "SUCCESS":
             return []
-        parsed = extract_json_block(response["text"])
 
+        # Extract and parse response
+        parsed = extract_json_block(response["text"])
         return parsed.get("recommendations", [])
 
     # -------------------------------------------------

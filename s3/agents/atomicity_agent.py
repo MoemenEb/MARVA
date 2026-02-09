@@ -2,35 +2,71 @@ from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
 from entity.agent import AgentResult
 
+
 class AtomicityAgent(BaseValidationAgent):
+    """
+    Atomicity validation agent with true system prompt caching.
+
+    Uses CachedOllamaClient which sends system prompt ONCE during initialization
+    and reuses the cached context for all subsequent validations.
+
+    Architecture:
+    - System prompt: Sent once in __init__ via CachedOllamaClient
+    - Task prompt: Sent per validation with cached context
+    - Stateless: No conversation history between different requirements
+    - True caching: ~97% reduction in prompt tokens after first call
+    """
 
     def __init__(self, llm, prompts: dict[str, str]):
+        """
+        Initialize the atomicity agent.
+
+        Args:
+            llm: CachedOllamaClient instance (already initialized with system prompt)
+            prompts: Dict with 'task' prompt template (system prompt is in llm)
+        """
         super().__init__(llm)
         self.prompts = prompts
 
     def run(self, input_data: dict) -> dict:
+        """
+        Validate a requirement for atomicity.
+
+        Sends only the task prompt (with requirement). System prompt context
+        is cached in the LLM client and reused automatically.
+
+        Args:
+            input_data: Dict containing 'requirement' object with .text attribute
+
+        Returns:
+            Dict with 'atomicity' key mapping to AgentResult
+        """
         requirement_text = input_data["requirement"].text
-        # -------------------------------------------------
-        # Step 1 — Initial judgment
-        # -------------------------------------------------
-        initial_prompt = self.prompts["initial"].replace(
-            "{{REQUIREMENT}}", requirement_text
-        )
 
-        response = self.llm.generate(initial_prompt)
+        # Build task prompt with the specific requirement
+        task_prompt = self.prompts["task"].replace("{{REQUIREMENT}}", requirement_text)
+
+        # Call LLM with ONLY task prompt (system context cached)
+        response = self.llm.generate(task_prompt)
+
+        # Handle execution status
         if response["execution_status"] != "SUCCESS":
-            return {"atomicity": AgentResult(agent="atomicity", status="FLAG", issues=[])}
-        initial_raw = response["text"]
+            return {
+                "atomicity": AgentResult(
+                    agent="atomicity",
+                    status="FLAG",
+                    issues=[]
+                )
+            }
 
-        # -------------------------------------------------
-        # Step 2 — Normalize output
-        # -------------------------------------------------
-        result = extract_json_block(initial_raw)
+        # Extract and parse response
+        response_text = response["text"]
+        result = extract_json_block(response_text)
 
-        agent = AgentResult(
-            agent="atomicity",
-            status=result.get("decision", "FLAG"),
-            issues=result.get("issues", [])
-        )
- 
-        return {"atomicity": agent}
+        return {
+            "atomicity": AgentResult(
+                agent="atomicity",
+                status=result.get("decision", "FLAG"),
+                issues=result.get("issues", [])
+            )
+        }

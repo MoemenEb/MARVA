@@ -1,0 +1,8 @@
+Validation mode:
+{{MODE}}
+
+Requirement(s):
+{{REQUIREMENTS}}
+
+Detected issues:
+{{ISSUES}}
