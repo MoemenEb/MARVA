@@ -5,12 +5,12 @@ from utils.reader.reader import Reader
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-RAW_DATA_PATH = PROJECT_ROOT / "data" / "raw"
+DATA_PATH = PROJECT_ROOT / "data"
 logger = logging.getLogger("marva.dataset_loader")
 
 
 def load_dataset(path: str, limit: int | None = None) -> RequirementSet:
-    data_path = RAW_DATA_PATH / f"{path}"
+    data_path = DATA_PATH / f"{path}"
     logger.debug("Loading dataset from %s", data_path)
     t0 = time.perf_counter()
     reader = Reader.get_reader(data_path)

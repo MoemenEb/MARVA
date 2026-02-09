@@ -1,0 +1,19 @@
+id,requirement,redundancy,consistency,completion,NOTES
+G5,The product shall have the ability to receive automatic software updates as new threats emerge.  100\% of customers will be able to receive automatic software updates transmitted to the installed product.',,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G5,All credit card information will be secured on the server  and only accessible by authorized Izogn administrators.  Information will be encrypted in the database.',,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G5,The product shall free of computer viruses.',,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G5,The product must be developed with the J2SE/J2EE programming language libraries',,,,Base requirement
+G5,The product must work with most database management systems (DBMS) on the market  whether the DBMS is colocated with the product on the same machine or is located on a different machine on the computer network.',,,,Base requirement
+G5,The product must be highly configurable for use with various database management systems for the end users.  80\% of end users are able to integrate new database management systems with the product without changing the product's software code.',,,,Base requirement
+G5,The product shall allow the user to select a chosen language from one of the target market countries.',,,,Base requirement
+G5,Izogn Administrator must be able to add new products to the website within 2 minutes.',,,,Base requirement
+G5,Only authorized users shall have access to clinical site information.',,,,Base requirement
+G5,The Disputes application shall comply with the corporate standards for user interface creation for internally and externally used applications.',,,,Base requirement
+G5,The product shall be able to handle 10 000 concurrent users within 2 years of the initial launch.',,,,Base requirement
+G5,The product shall retain the customer's buying preferences and information.',,,,Base requirement
+G5,The system shall automatically log out users after 15 minutes of inactivity.,,G5-R100,,CONFLICT: Contradictory timeout policies - 15-min auto-logout vs. indefinite session
+G5,The system shall maintain user sessions indefinitely until manual logout.,,G5-R099,,CONFLICT: Contradictory timeout policies - 15-min auto-logout vs. indefinite session
+G5,All passwords must be exactly 8 characters in length.,,G5-R102,,CONFLICT: Incompatible password length constraints - fixed 8 chars vs. 12-20 range
+G5,The system shall accept passwords between 12 and 20 characters.,,G5-R101,,CONFLICT: Incompatible password length constraints - fixed 8 chars vs. 12-20 range
+G5,The system shall encrypt all data at rest using AES-256 encryption.,,G5-R104,,CONFLICT: Contradictory encryption policies - mandatory AES-256 vs. no encryption
+G5,The system shall not apply encryption to stored data to optimize performance.,,G5-R103,,CONFLICT: Contradictory encryption policies - mandatory AES-256 vs. no encryption

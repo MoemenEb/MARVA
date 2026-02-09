@@ -1,0 +1,24 @@
+id,requirement,redundancy,consistency,completion,NOTES
+G4,The product shall notify building personnel of equipment transport requests.,,,,Base requirement
+G4,The leads washing functionality will store any potential lead duplicates returned by the enterprise system.,,,,Base requirement
+G4,The look and feel of the system shall conform to the user interface standards of the smart device.',,,,Base requirement
+G4,"Daily usage statistics should be logged, and accessible by the administrator.",,,,Base requirement
+G4,The current repair facility ratings shall be displayed to the user.,,,,Base requirement
+G4,If projected  the data must be understandable. On a 10x10 projection screen  90\% of viewers must be able to determine that Events or Activities are occuring in current time from a viewing distance of 100',,,,Base requirement
+G4,"When the hit results in sinking a ship, the product shall notify the players that the ship was sunk.",,,,Base requirement
+G4,All of the users shall be able to use the system after one day of training.',,,,Base requirement
+G4,The estimator shall search for available recycled parts using damaged vehicle parts information.,,,,Base requirement
+G4,The system shall refresh the display every 60 seconds.',,,,Base requirement
+G4,The product shall have a customizable Look and Feel.,,,,Base requirement
+G4,The product shall be able to support multiple remote users',,,,Base requirement
+G4,The product shall be available during normal business hours. As long as the user has access to the client PC  the system will be available 99\% of the time during the first six months of operation.',,,,Base requirement
+G4,The system shall use symbols and words that are naturally understandable by the user community.',,,,Base requirement
+G4,The product shall allow the player to position ships vertically on their grid.,,,,Base requirement
+G4,The system shall validate user credentials before granting access.,G4-R080,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G4,The system shall verify user login information prior to allowing entry.,G4-R079,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G4,The application shall log all error messages to the system log file.,G4-R082,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G4,The application shall record error events in the log file.,G4-R081,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G4,The system shall display confirmation message after successful save operation.,G4-R084,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement
+G4,"Upon successful save, the system shall show a confirmation to the user.",G4-R083,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement
+G4,The system response time shall not exceed 2 seconds.,,G4-R086,,CONFLICT: Incompatible performance requirements - 2 sec vs. 5 sec response time
+G4,The system shall respond to user requests within 5 seconds maximum.,,G4-R085,,CONFLICT: Incompatible performance requirements - 2 sec vs. 5 sec response time

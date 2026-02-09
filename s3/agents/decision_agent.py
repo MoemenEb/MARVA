@@ -43,10 +43,14 @@ class DecisionAgent(BaseValidationAgent):
         final_decision = self._final_decision(validations)
         self.logger.info("Final decision: %s", final_decision)
 
-        t0 = time.perf_counter()
-        recommendations = self._recommendations(state, validations, mode)
-        rec_elapsed = time.perf_counter() - t0
-        self.logger.debug("Recommendations generated in %.2fs (%d items)", rec_elapsed, len(recommendations))
+        if final_decision == "PASS":
+            self.logger.debug("Final decision is PASS — skipping recommendation generation")
+            recommendations = []
+        else:
+            t0 = time.perf_counter()
+            recommendations = self._recommendations(state, validations, mode)
+            rec_elapsed = time.perf_counter() - t0
+            self.logger.debug("Recommendations generated in %.2fs (%d items)", rec_elapsed, len(recommendations))
 
         # Update the entity directly
         if mode == "single":

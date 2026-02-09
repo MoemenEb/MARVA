@@ -1,0 +1,22 @@
+id,requirement,redundancy,consistency,completion,NOTES
+G6,"The website will allow customers to search for movies by title, actor, or director.",,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G6,PME Subsystem shall allow keeping submenus within menus and products within submenus in a managed and persisted order.,,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G6,"Daily usage statistics should be logged, and accessible by the administrator.",,,"Missing: error handling, rollback mechanism, and audit logging for complete transaction management","INCOMPLETE: Missing: error handling, rollback mechanism, and audit logging for complete transaction management"
+G6,The system shall search for available recycled parts for the supplied vehicle parts and suppliers.,,,,Base requirement
+G6,The Disputes System must allow the user to create three unique types of ticket retrieval requests. The three types of ticket retrieval requests are (1) Request for original receipt (2) Request for a copy of the receipt or (3) Request for a portfolio. A portfolio consists of documentation that would provide proof of a purchase such as the documentation that is received from a car rental agency that is more than a sales receipt.,,,,Base requirement
+G6,"The system shall be able to display a printable summary for individual nursing students, which will include (but not be limited to) student name, student ID, admission date, classes, credits, GPA, and the cohort that the student is enrolled in.",,,,Base requirement
+G6,The product shall allow a player to initiate a game by selecting another available player from the list of players.,,,,Base requirement
+G6,The system will display a blank set of ratings if there are not ratings yet defined.,,,,Base requirement
+G6,The Disputes System shall prevent the creation of duplicate dispute requests 100% of the time.,,,,Base requirement
+G6,"The system shall be able to display a printable summary for individual clinical labs, which will include (but not be limited to) class name, class number, lab section, listing of students enrolled, instructor, day(s), time, and location.",,,,Base requirement
+G6,"When the hit results in sinking a ship, the product shall mark the ship as sunk on the defensive grid of the defensive player.",,,,Base requirement
+G6,The estimator shall not apply recycled parts to the collision estimate if no available parts are returned.,,,,Base requirement
+G6,The product shall allow the player to position ships diagonally on their grid,,,,Base requirement
+G6,The product shall allow a player to position ships horizontally on their grid.,,,,Base requirement
+G6,The Disputes System will facilitate direct data entry of a dispute case via a user interface that supports real time responses to the users.,,,,Base requirement
+G6,The system shall validate user credentials before granting access.,G6-R121,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G6,The system shall verify user login information prior to allowing entry.,G6-R120,,,DUPLICATE: Both requirements specify user authentication validation - same functional intent with different wording
+G6,The application shall log all error messages to the system log file.,G6-R123,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G6,The application shall record error events in the log file.,G6-R122,,,DUPLICATE: Both require logging errors to file - redundant specification of logging mechanism
+G6,The system shall display confirmation message after successful save operation.,G6-R125,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement
+G6,"Upon successful save, the system shall show a confirmation to the user.",G6-R124,,,DUPLICATE: Both specify post-save confirmation display - same user feedback requirement
