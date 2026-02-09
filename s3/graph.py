@@ -5,11 +5,15 @@ import time
 import logging
 
 
+logger = logging.getLogger("marva.s3.graph")
+
+
 # ------------------------------------------------------------------
 # Control-only nodes (no state writes)
 # ------------------------------------------------------------------
 
 def orchestrator_agent(state: MARVAState):
+    logger.debug("Orchestrator received state (mode=%s)", state["mode"])
     return {
         "mode": state["mode"],
         "requirement": state.get("requirement"),
@@ -19,11 +23,13 @@ def orchestrator_agent(state: MARVAState):
 
 def single_parallel_node(state: MARVAState):
     """Fan-out node for single-requirement validation."""
+    logger.debug("Entering single parallel fan-out")
     return None
 
 
 def group_parallel_node(state: MARVAState):
     """Fan-out node for group-level validation."""
+    logger.debug("Entering group parallel fan-out")
     return None
 
 
@@ -44,21 +50,20 @@ def execute_parallel_agents(state: MARVAState, agent_list: list, max_workers: in
     Returns:
         Merged results from all agents
     """
-    logger = logging.getLogger("marva.s3.graph")
-
     if max_workers is None:
         max_workers = len(agent_list)
 
-    logger.info(f"Starting parallel execution of {len(agent_list)} agents: {[name for _, name in agent_list]}")
+    agent_names = [name for _, name in agent_list]
+    logger.info("Starting parallel execution of %d agents: %s", len(agent_list), agent_names)
     overall_start = time.perf_counter()
 
     # Wrapper to time individual agent execution
     def timed_agent_run(agent, name):
         start = time.perf_counter()
-        logger.info(f"[{name}] Started execution")
+        logger.debug("[%s] Started execution", name)
         result = agent.run(state)
         elapsed = time.perf_counter() - start
-        logger.info(f"[{name}] Completed in {elapsed:.2f}s")
+        logger.info("[%s] Completed in %.2fs", name, elapsed)
         return result
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -76,11 +81,11 @@ def execute_parallel_agents(state: MARVAState, agent_list: list, max_workers: in
                 result = future.result()
                 merged_results.update(result)
             except Exception as e:
-                logger.error(f"[{agent_name}] failed: {e}")
+                logger.error("[%s] failed: %s", agent_name, e)
                 raise
 
         overall_elapsed = time.perf_counter() - overall_start
-        logger.info(f"Parallel execution completed in {overall_elapsed:.2f}s total")
+        logger.info("Parallel execution completed in %.2fs (agents: %s)", overall_elapsed, agent_names)
 
         return merged_results
 
@@ -90,6 +95,7 @@ def execute_parallel_agents(state: MARVAState, agent_list: list, max_workers: in
 # ------------------------------------------------------------------
 
 def build_marva_s3_graph(agents: dict):
+    logger.debug("Building S3 state graph")
 
     graph = StateGraph(MARVAState)
 
@@ -102,22 +108,10 @@ def build_marva_s3_graph(agents: dict):
 
     # Single-scope validation agents
     graph.add_node("atomicity", lambda s: agents["atomicity"].run(s))
-    # NOTE: clarity and completion_single now run in parallel via single_parallel_exec node
-    # graph.add_node("clarity", lambda s: agents["clarity"].run(s))
-    # graph.add_node("completion_single", lambda s: agents["completion_single"].run(s))
-
-    # Group-scope validation agents
-    # NOTE: redundancy, completion_group, and consistency_group now run in parallel via group_parallel_exec node
-    # graph.add_node("redundancy", lambda s: agents["redundancy"].run(s))
-    # graph.add_node("completion_group", lambda s: agents["completion_group"].run(s))
-    # graph.add_node("consistency_group", lambda s: agents["consistency_group"].run(s))
 
     # Control / synchronization nodes
     graph.add_node("single_parallel", single_parallel_node)
     graph.add_node("group_parallel", group_parallel_node)
-    # NOTE: join nodes replaced by parallel execution nodes
-    # graph.add_node("join_single", join_node)
-    # graph.add_node("join_group", join_node)
 
     # Parallel execution nodes
     def single_parallel_execution(state: MARVAState):
@@ -152,11 +146,14 @@ def build_marva_s3_graph(agents: dict):
     # -------------------------------------------------
 
     def orchestrator_router(state: MARVAState):
-        if state["mode"] == "single":
+        mode = state["mode"]
+        if mode == "single":
+            logger.debug("Orchestrator routing to 'atomicity' (mode=single)")
             return "atomicity"
-        if state["mode"] == "group":
+        if mode == "group":
+            logger.debug("Orchestrator routing to 'group_parallel' (mode=group)")
             return "group_parallel"
-        raise ValueError(f"Unknown mode: {state['mode']}")
+        raise ValueError(f"Unknown mode: {mode}")
 
     graph.add_conditional_edges(
         "orchestrator",
@@ -172,8 +169,11 @@ def build_marva_s3_graph(agents: dict):
     # -------------------------------------------------
 
     def atomicity_router(state: MARVAState):
-        if state["atomicity"].status.upper() == "FAIL":
+        status = state["atomicity"].status.upper()
+        if status == "FAIL":
+            logger.warning("Atomicity FAILED — skipping to decision (hard gate)")
             return "decision"
+        logger.debug("Atomicity passed (%s) — continuing to parallel agents", status)
         return "single_parallel"
 
     graph.add_conditional_edges(
@@ -207,4 +207,5 @@ def build_marva_s3_graph(agents: dict):
 
     graph.add_edge("decision", END)
 
+    logger.debug("S3 state graph built successfully")
     return graph

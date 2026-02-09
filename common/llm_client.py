@@ -1,6 +1,9 @@
 import requests
 import time
+import logging
 from typing import Dict, Optional
+
+logger = logging.getLogger("marva.llm_client")
 
 
 class LLMClient:
@@ -19,6 +22,7 @@ class LLMClient:
         self.temperature = temperature
         self.max_retries = max_retries
         self.retry_backoff = retry_backoff
+        logger.debug("LLMClient initialized (model=%s, host=%s, timeout=%ds)", model, self.host, timeout)
 
     def generate(self, prompt: str, reset_session: bool = False) -> Dict:
         """
@@ -42,6 +46,7 @@ class LLMClient:
 
         attempts = 0
         start = time.time()
+        logger.debug("LLM generate called (prompt_len=%d, model=%s)", len(prompt), self.model)
 
         while attempts <= self.max_retries:
             try:
@@ -56,21 +61,25 @@ class LLMClient:
 
                 elapsed = int((time.time() - start) * 1000)
                 data = response.json()
+                text = data.get("response", "").strip()
+                logger.debug("LLM response received (latency=%dms, response_len=%d, attempts=%d)", elapsed, len(text), attempts)
                 return {
                     "execution_status": "SUCCESS",
                     "attempts": attempts,
-                    "text": data.get("response", "").strip(),
+                    "text": text,
                     "latency_ms": elapsed,
                     "error": None
                 }
 
             except requests.exceptions.Timeout:
+                logger.warning("LLM request timed out (attempt %d/%d, timeout=%ds)", attempts, self.max_retries + 1, self.timeout)
                 if attempts > self.max_retries:
                     break
                 time.sleep(self.retry_backoff)
 
             except requests.exceptions.RequestException as e:
                 elapsed = int((time.time() - start) * 1000)
+                logger.error("LLM request failed after %dms: %s", elapsed, e)
                 return {
                     "execution_status": "ERROR",
                     "attempts": attempts,
@@ -80,6 +89,7 @@ class LLMClient:
                 }
 
         elapsed = int((time.time() - start) * 1000)
+        logger.error("LLM max retries exceeded (%d attempts, %dms total)", attempts, elapsed)
         return {
             "execution_status": "TIMEOUT",
             "attempts": attempts,

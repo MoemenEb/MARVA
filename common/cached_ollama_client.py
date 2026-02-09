@@ -11,7 +11,10 @@ for ChatOllama or LLMClient in agent initialization.
 
 import requests
 import time
+import logging
 from typing import Dict, List, Optional
+
+logger = logging.getLogger("marva.cached_ollama")
 
 
 class CachedOllamaClient:
@@ -87,6 +90,9 @@ class CachedOllamaClient:
             }
         }
 
+        logger.debug("Caching system prompt (model=%s, prompt_len=%d)", self.model, len(self.system_prompt))
+        start = time.perf_counter()
+
         try:
             response = requests.post(url, json=payload, timeout=self.timeout)
             response.raise_for_status()
@@ -94,14 +100,18 @@ class CachedOllamaClient:
 
             # Extract and return context
             context = result.get("context", [])
+            elapsed_ms = (time.perf_counter() - start) * 1000
 
             if not context:
-                print(f"Warning: No context returned from system prompt initialization")
+                logger.warning("No context returned from system prompt init (model=%s, %.0fms)", self.model, elapsed_ms)
+            else:
+                logger.info("System prompt cached (model=%s, context_tokens=%d, %.0fms)", self.model, len(context), elapsed_ms)
 
             return context
 
         except Exception as e:
-            print(f"Error initializing system context: {e}")
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            logger.error("Failed to cache system prompt (model=%s, %.0fms): %s", self.model, elapsed_ms, e)
             return []
 
     def generate(self, prompt: str) -> Dict:
@@ -129,6 +139,8 @@ class CachedOllamaClient:
             }
         }
 
+        logger.debug("Cached generate called (prompt_len=%d, cached_context=%d tokens)", len(prompt), len(self.system_context))
+
         for attempt in range(1, self.max_retries + 1):
             try:
                 start_time = time.time()
@@ -138,16 +150,19 @@ class CachedOllamaClient:
                 result = response.json()
 
                 latency_ms = int((time.time() - start_time) * 1000)
+                text = result.get("response", "")
+                logger.debug("Cached generate response (latency=%dms, response_len=%d, attempt=%d)", latency_ms, len(text), attempt)
 
                 return {
                     "execution_status": "SUCCESS",
-                    "text": result.get("response", ""),
+                    "text": text,
                     "latency_ms": latency_ms,
                     "error": None,
                     "attempts": attempt
                 }
 
             except requests.Timeout:
+                logger.warning("Cached generate timed out (attempt %d/%d, timeout=%ds)", attempt, self.max_retries, self.timeout)
                 if attempt == self.max_retries:
                     return {
                         "execution_status": "TIMEOUT",
@@ -159,6 +174,7 @@ class CachedOllamaClient:
                 continue
 
             except Exception as e:
+                logger.error("Cached generate failed (attempt %d/%d): %s", attempt, self.max_retries, e)
                 if attempt == self.max_retries:
                     return {
                         "execution_status": "ERROR",

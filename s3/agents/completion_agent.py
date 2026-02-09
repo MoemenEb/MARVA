@@ -1,3 +1,4 @@
+import time
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
 from entity.agent import AgentResult
@@ -48,12 +49,16 @@ class CompletionAgent(BaseValidationAgent):
 
         # Build task prompt and determine output key based on mode
         task_prompt, output_key = self._build_prompt(input_data, mode)
+        self.logger.debug("Running completion validation (mode=%s, key=%s)", mode, output_key)
 
         # Call LLM with ONLY task prompt (system context cached)
+        t0 = time.perf_counter()
         response = self.llm.generate(task_prompt)
+        llm_elapsed = time.perf_counter() - t0
 
         # Handle execution status
         if response["execution_status"] != "SUCCESS":
+            self.logger.warning("Completion LLM call failed after %.2fs: %s", llm_elapsed, response.get("error"))
             return {
                 output_key: AgentResult(
                     agent=output_key,
@@ -65,11 +70,14 @@ class CompletionAgent(BaseValidationAgent):
         # Extract and parse response
         response_text = response["text"]
         result = extract_json_block(response_text)
+        status = result.get("decision", "FLAG")
+
+        self.logger.debug("Completion result (%s): %s (LLM %.2fs, %dms reported)", output_key, status, llm_elapsed, response.get("latency_ms", 0))
 
         return {
             output_key: AgentResult(
                 agent=output_key,
-                status=result.get("decision", "FLAG"),
+                status=status,
                 issues=result.get("issues", [])
             )
         }

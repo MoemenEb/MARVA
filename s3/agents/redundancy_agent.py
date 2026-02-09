@@ -1,3 +1,4 @@
+import time
 from s3.agents.base import BaseValidationAgent
 from utils.normalization import extract_json_block
 from entity.agent import AgentResult
@@ -42,6 +43,7 @@ class RedundancyAgent(BaseValidationAgent):
             Dict with 'redundancy' key mapping to AgentResult
         """
         requirement_set = input_data["requirement_set"]
+        self.logger.debug("Running redundancy validation")
 
         # Build task prompt with the requirement set
         task_prompt = self.prompts["task"].replace(
@@ -49,10 +51,13 @@ class RedundancyAgent(BaseValidationAgent):
         )
 
         # Call LLM with ONLY task prompt (system context cached)
+        t0 = time.perf_counter()
         response = self.llm.generate(task_prompt)
+        llm_elapsed = time.perf_counter() - t0
 
         # Handle execution status
         if response["execution_status"] != "SUCCESS":
+            self.logger.warning("Redundancy LLM call failed after %.2fs: %s", llm_elapsed, response.get("error"))
             return {
                 "redundancy": AgentResult(
                     agent="redundancy",
@@ -64,11 +69,14 @@ class RedundancyAgent(BaseValidationAgent):
         # Extract and parse response
         response_text = response["text"]
         result = extract_json_block(response_text)
+        status = result.get("decision", "FLAG")
+
+        self.logger.debug("Redundancy result: %s (LLM %.2fs, %dms reported)", status, llm_elapsed, response.get("latency_ms", 0))
 
         return {
             "redundancy": AgentResult(
                 agent="redundancy",
-                status=result.get("decision", "FLAG"),
+                status=status,
                 issues=result.get("issues", [])
             )
         }

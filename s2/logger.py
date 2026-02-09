@@ -4,7 +4,7 @@ from pathlib import Path
 
 def init_s2_logger():
     logger = logging.getLogger("marva.s2")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     if logger.handlers:
         return

@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROMPT_DIR = PROJECT_ROOT / "prompts"
+logger = logging.getLogger("marva.prompt_loader")
 
 def load_prompt(name: str, category: str = None) -> str:
     """
@@ -20,5 +22,8 @@ def load_prompt(name: str, category: str = None) -> str:
         path = PROMPT_DIR / f"{name}.txt"
 
     if not path.exists():
+        logger.error("Prompt not found: %s", path)
         raise FileNotFoundError(f"Prompt not found: {path}")
-    return path.read_text(encoding="utf-8")
+    content = path.read_text(encoding="utf-8")
+    logger.debug("Loaded prompt '%s' (%d chars)", name, len(content))
+    return content

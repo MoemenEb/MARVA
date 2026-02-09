@@ -22,24 +22,28 @@ def main(mode: str, scope: str, limit: int | None):
 
     setup_logging(run_id="s3_run_" + datetime.now().strftime('%Y%m%d'))
     init_s3_logger()
-    # Enable debug logging for graph to see parallel execution timing
-    logging.getLogger("marva.s3.graph").setLevel(logging.DEBUG)
     logger = logging.getLogger(LOGGER)
-    logger.info(f"Starting S3 runner with mode={mode}, scope={scope}, limit={limit}")
+    logger.info("Starting S3 runner (mode=%s, scope=%s, limit=%s)", mode, scope, limit)
 
     # -----------------------------
     # Load dataset
     # -----------------------------
-    logger.info(f"Loading dataset {scope}")
+    t0 = time.perf_counter()
     requirement_set = load_dataset(scope, limit)
-    logger.info(f"Loaded {len(requirement_set.requirements)} requirements from dataset")
+    logger.info("Loaded %d requirements from '%s' in %.2fs", len(requirement_set.requirements), scope, time.perf_counter() - t0)
 
     # -----------------------------
     # Init agents + graph
     # -----------------------------
+    t0 = time.perf_counter()
     agents = build_agents()
+    agents_elapsed = time.perf_counter() - t0
+    logger.info("All agents built and system prompts cached in %.2fs", agents_elapsed)
+
+    t0 = time.perf_counter()
     graph = build_marva_s3_graph(agents)
     app = graph.compile()
+    logger.debug("Graph compiled in %.2fs", time.perf_counter() - t0)
 
     decision = Decision(
         framework=FRAMEWORK,
@@ -50,37 +54,41 @@ def main(mode: str, scope: str, limit: int | None):
     # Execute
     # -----------------------------
     start_time = time.perf_counter()
-    logger.info("Start S3 pipeline")
+    logger.info("Starting S3 pipeline execution")
 
     if mode == "single":
-        for req in requirement_set.requirements:
+        total = len(requirement_set.requirements)
+        for idx, req in enumerate(requirement_set.requirements, 1):
+            req_start = time.perf_counter()
+            logger.info("[%d/%d] Processing requirement '%s'", idx, total, req.id)
             state = {
                 "mode": "single",
                 "requirement": req,
             }
             app.invoke(state)
-            logger.info(f"[S3-single] {req.id} done")
+            req_elapsed = time.perf_counter() - req_start
+            logger.info("[%d/%d] Requirement '%s' => %s (%.2fs)", idx, total, req.id, req.final_decision, req_elapsed)
 
     elif mode == "group":
+        logger.info("Running group validation for %d requirements", len(requirement_set.requirements))
         state = {
             "mode": "group",
             "requirement_set": requirement_set,
         }
         app.invoke(state)
-        logger.info("[S3-group] done")
+        logger.info("Group validation => %s", requirement_set.final_decision)
 
-    logger.info("S3 pipeline finished")
+    pipeline_elapsed = time.perf_counter() - start_time
+    logger.info("S3 pipeline finished in %.2fs", pipeline_elapsed)
 
     # -----------------------------
     # Save results
     # -----------------------------
-    logger.info("Saving results ...")
     decision.duration = int(time.perf_counter() - start_time)
     decision.set_decision(requirement_set)
 
     output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
-    logger.info(f"S3 runner completed in {decision.duration} seconds")
-    logger.info(f"Validation summary is saved at: {DECISION_OUTPUT_PATH}/{output_dir}")
+    logger.info("S3 runner completed in %ds | output: %s/%s", decision.duration, DECISION_OUTPUT_PATH, output_dir)
 
 
 if __name__ == "__main__":

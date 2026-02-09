@@ -1,5 +1,7 @@
 # s3/agents/__init__.py
 
+import logging
+import time
 from common.llm_client import LLMClient
 from common.cached_ollama_client import CachedOllamaClient
 from common.config import load_config
@@ -11,75 +13,37 @@ from s3.agents.consistency_agent import ConsistencyAgent
 from s3.agents.decision_agent import DecisionAgent
 from s3.agents.redundancy_agent import RedundancyAgent
 
+logger = logging.getLogger("marva.s3.agents")
+
 
 def build_agents():
+    overall_start = time.perf_counter()
+    logger.info("Building all S3 agents with cached system prompts")
+
     # -------------------------------------------------
     # CachedOllamaClient instances for all agents with system prompt caching
     # System prompt sent ONCE during initialization, cached for all calls
     # -------------------------------------------------
     cfg = load_config()
-    atomicity_llm = CachedOllamaClient(
-        model=cfg["model"]["model_name"],
-        base_url=cfg["model"]["host"],
-        system_prompt=load_prompt("atomicity", category="s3/system_prompts"),
-        temperature=cfg["model"]["temperature"],
-        timeout=cfg["global"]["timeout_seconds"],
-        max_retries=cfg["global"]["max_retries"],
-    )
 
-    clarity_llm = CachedOllamaClient(
-        model=cfg["model"]["model_name"],
-        base_url=cfg["model"]["host"],
-        system_prompt=load_prompt("clarity", category="s3/system_prompts"),
-        temperature=cfg["model"]["temperature"],
-        timeout=cfg["global"]["timeout_seconds"],
-        max_retries=cfg["global"]["max_retries"],
-    )
+    agent_names = [
+        "atomicity", "clarity", "redundancy", "consistency",
+        "completion_single", "completion_group", "decision"
+    ]
+    llm_clients = {}
 
-    redundancy_llm = CachedOllamaClient(
-        model=cfg["model"]["model_name"],
-        base_url=cfg["model"]["host"],
-        system_prompt=load_prompt("redundancy", category="s3/system_prompts"),
-        temperature=cfg["model"]["temperature"],
-        timeout=cfg["global"]["timeout_seconds"],
-        max_retries=cfg["global"]["max_retries"],
-    )
-
-    consistency_llm = CachedOllamaClient(
-        model=cfg["model"]["model_name"],
-        base_url=cfg["model"]["host"],
-        system_prompt=load_prompt("consistency", category="s3/system_prompts"),
-        temperature=cfg["model"]["temperature"],
-        timeout=cfg["global"]["timeout_seconds"],
-        max_retries=cfg["global"]["max_retries"],
-    )
-
-    completion_single_llm = CachedOllamaClient(
-        model=cfg["model"]["model_name"],
-        base_url=cfg["model"]["host"],
-        system_prompt=load_prompt("completion_single", category="s3/system_prompts"),
-        temperature=cfg["model"]["temperature"],
-        timeout=cfg["global"]["timeout_seconds"],
-        max_retries=cfg["global"]["max_retries"],
-    )
-
-    completion_group_llm = CachedOllamaClient(
-        model=cfg["model"]["model_name"],
-        base_url=cfg["model"]["host"],
-        system_prompt=load_prompt("completion_group", category="s3/system_prompts"),
-        temperature=cfg["model"]["temperature"],
-        timeout=cfg["global"]["timeout_seconds"],
-        max_retries=cfg["global"]["max_retries"],
-    )
-
-    decision_llm = CachedOllamaClient(
-        model=cfg["model"]["model_name"],
-        base_url=cfg["model"]["host"],
-        system_prompt=load_prompt("decision", category="s3/system_prompts"),
-        temperature=cfg["model"]["temperature"],
-        timeout=cfg["global"]["timeout_seconds"],
-        max_retries=cfg["global"]["max_retries"],
-    )
+    for name in agent_names:
+        t0 = time.perf_counter()
+        logger.info("Initializing cached LLM client for '%s'", name)
+        llm_clients[name] = CachedOllamaClient(
+            model=cfg["model"]["model_name"],
+            base_url=cfg["model"]["host"],
+            system_prompt=load_prompt(name, category="s3/system_prompts"),
+            temperature=cfg["model"]["temperature"],
+            timeout=cfg["global"]["timeout_seconds"],
+            max_retries=cfg["global"]["max_retries"],
+        )
+        logger.info("Cached LLM client '%s' ready in %.2fs", name, time.perf_counter() - t0)
 
     # -------------------------------------------------
     # Load prompts
@@ -112,13 +76,17 @@ def build_agents():
     }
 
     # All agents now use CachedOllamaClient with system prompt caching
-    return {
-        "atomicity": AtomicityAgent(llm=atomicity_llm, prompts=atomicity_prompts),
-        "clarity": ClarityAgent(llm=clarity_llm, prompts=clarity_prompts),
-        "redundancy": RedundancyAgent(llm=redundancy_llm, prompts=redundancy_prompts),
-        "consistency_single": ConsistencyAgent(llm=consistency_llm, prompts=consistency_prompts),
-        "consistency_group": ConsistencyAgent(llm=consistency_llm, prompts=consistency_prompts),
-        "completion_single": CompletionAgent(llm=completion_single_llm, prompts=completion_prompts),
-        "completion_group": CompletionAgent(llm=completion_group_llm, prompts=completion_prompts),
-        "decision": DecisionAgent(llm=decision_llm, prompts=decision_prompts),
+    agents = {
+        "atomicity": AtomicityAgent(llm=llm_clients["atomicity"], prompts=atomicity_prompts),
+        "clarity": ClarityAgent(llm=llm_clients["clarity"], prompts=clarity_prompts),
+        "redundancy": RedundancyAgent(llm=llm_clients["redundancy"], prompts=redundancy_prompts),
+        "consistency_single": ConsistencyAgent(llm=llm_clients["consistency"], prompts=consistency_prompts),
+        "consistency_group": ConsistencyAgent(llm=llm_clients["consistency"], prompts=consistency_prompts),
+        "completion_single": CompletionAgent(llm=llm_clients["completion_single"], prompts=completion_prompts),
+        "completion_group": CompletionAgent(llm=llm_clients["completion_group"], prompts=completion_prompts),
+        "decision": DecisionAgent(llm=llm_clients["decision"], prompts=decision_prompts),
     }
+
+    overall_elapsed = time.perf_counter() - overall_start
+    logger.info("All %d agents built in %.2fs", len(agents), overall_elapsed)
+    return agents
