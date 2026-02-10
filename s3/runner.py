@@ -10,6 +10,7 @@ from s3.agents import build_agents
 from s3.logger import init_s3_logger
 from utils.dataset_loader import load_dataset
 from utils.save_runner_decision import save_runner_decision
+from utils.save_runner_csv import save_runner_csv
 from entity.decision import Decision
 
 
@@ -67,6 +68,7 @@ def main(mode: str, scope: str, limit: int | None):
             }
             app.invoke(state)
             req_elapsed = time.perf_counter() - req_start
+            req.duration_seconds = round(req_elapsed, 3)
             logger.info("[%d/%d] Requirement '%s' => %s (%.2fs)", idx, total, req.id, req.final_decision, req_elapsed)
 
     elif mode == "group":
@@ -88,7 +90,13 @@ def main(mode: str, scope: str, limit: int | None):
     decision.set_decision(requirement_set)
 
     output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
-    logger.info("S3 runner completed in %ds | output: %s/%s", decision.duration, DECISION_OUTPUT_PATH, output_dir)
+    csv_path = save_runner_csv(requirement_set, mode, decision.duration, output_dir)
+    summary_path = output_dir / "summary.json"
+    if mode == "single":
+        detailed_path = output_dir / "detailed.json"
+        logger.info("S3 runner completed in %ds | output: %s, %s, %s", decision.duration, summary_path, detailed_path, csv_path)
+    else:
+        logger.info("S3 runner completed in %ds | output: %s, %s", decision.duration, summary_path, csv_path)
 
 
 if __name__ == "__main__":

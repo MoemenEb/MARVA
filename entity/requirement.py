@@ -12,6 +12,9 @@ class Requirement:
         self.final_decision = None
         self.recommendation = {}
 
+        # per-requirement runtime in seconds (single mode only)
+        self.duration_seconds = 0.0
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -20,4 +23,5 @@ class Requirement:
             "single_validations": self.single_validations,
             "final_decision": self.final_decision,
             "recommendation": self.recommendation,
+            "duration_seconds": self.duration_seconds,
         }

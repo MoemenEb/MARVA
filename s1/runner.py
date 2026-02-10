@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 from utils.dataset_loader import load_dataset
 from utils.save_runner_decision import save_runner_decision
+from utils.save_runner_csv import save_runner_csv
 
 from common.llm_client import LLMClient
 from common.config import load_config
@@ -63,7 +64,13 @@ def main(mode: str, scope: str, limit: int | None):
     decision.decision = dec
 
     output_dir = save_runner_decision(decision.to_dict(), DECISION_OUTPUT_PATH)
-    logger.info("S1 runner completed in %ds | output: %s/%s", decision.duration, DECISION_OUTPUT_PATH, output_dir)
+    csv_path = save_runner_csv(requirement_set, mode, decision.duration, output_dir)
+    summary_path = output_dir / "summary.json"
+    if mode == "single":
+        detailed_path = output_dir / "detailed.json"
+        logger.info("S1 runner completed in %ds | output: %s, %s, %s", decision.duration, summary_path, detailed_path, csv_path)
+    else:
+        logger.info("S1 runner completed in %ds | output: %s, %s", decision.duration, summary_path, csv_path)
 
 
 if __name__ == "__main__":
