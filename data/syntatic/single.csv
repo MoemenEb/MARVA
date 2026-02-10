@@ -1,4 +1,4 @@
-"id","requirement","atomic","clarity","completion","NOTES"
+"id","requirement","atomicity","clarity","completion","NOTES"
 "Prj-1 - PR-026","Realtor shall either be able to generate a CMA report based on property criteria or provide an alternative method.","FAIL","PASS","PASS","Contains alternatives using OR/either, making it non-atomic (multiple possible behaviors)"
 "Prj-6 - PR-297","The system shall be intuitive to the Program Administrators/Nursing Staff Members. Input parameters not specified.'","PASS","PASS","FAIL","Missing critical parameters/inputs - insufficient detail on required data or configuration (incomplete interface specification)"
 "Prj-5 - PR-239","For each shot, the product shall notify the players whether the shot was a hit or miss. and shall also provide backup functionality.","FAIL","PASS","PASS","Contains multiple actions: original requirement + backup functionality (compound requirement with AND)"
