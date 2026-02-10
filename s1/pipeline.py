@@ -47,6 +47,7 @@ class S1Pipeline:
                 age = AgentSet(self.agents)
                 requirement.single_validations = age.agents_list()
                 req_elapsed = time.perf_counter() - req_start
+                requirement.duration_seconds = round(req_elapsed, 3)
                 self.logger.info("[%d/%d] Requirement '%s' => %s (%.2fs)", idx, total, requirement.id, requirement.final_decision, req_elapsed)
         elif mode == "group":
             self.logger.info("Running group validation for %d requirements", len(requirement_set.requirements))
