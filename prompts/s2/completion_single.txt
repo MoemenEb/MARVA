@@ -19,8 +19,6 @@ Non-behavioral or declarative requirements SHALL be considered complete if the i
 Environmental, legal, or organizational context SHALL NOT be assumed missing unless explicitly required.
 Actors may be systems, documents, data, or artifacts.
 
-
-
 Requirement under test: {{REQUIREMENT}}
 
 Step 1: Internal Checklist (Do Not Show)
@@ -50,7 +48,7 @@ Step 3 "Internal do not show":
 }
 
 Step 4: Final Output (Show Only This)
-Based on the previous responses, what is your final verdict? Does the requirement pass as an atomic and why?
+Based on the previous responses, what is your final verdict? Does the requirement pass as a complete and why?
 
 Your final response should be in the following JSON format only: 
 
