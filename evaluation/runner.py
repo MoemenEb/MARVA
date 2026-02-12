@@ -7,7 +7,7 @@ GROUND_TRUTH_DIR = Path("data/syntatic")
 DEFAULT_OUT_DIR = Path("results")
 
 GROUND_TRUTH_MAP = {
-    "single": GROUND_TRUTH_DIR / "single.csv",
+    "single": GROUND_TRUTH_DIR / "single_2.csv",
 }
 
 
