@@ -84,7 +84,17 @@ class ResultsEvaluator:
                 self._merged["final_decision_gt"] = "PASS"
                 for col in eval_gt_cols:
                     gt_vals = self._normalize(self._merged[f"{col}_gt"])
-                    self._merged.loc[gt_vals == "FAIL", "final_decision_gt"] = "FAIL"
+                    if col == "atomicity":
+                        # atomicity failure → definite FAIL
+                        self._merged.loc[gt_vals == "FAIL", "final_decision_gt"] = "FAIL"
+                    else:
+                        # clarity/completion failures → FLAG (needs revision)
+                        mask = (gt_vals == "FAIL") & (self._merged["final_decision_gt"] != "FAIL")
+                        self._merged.loc[mask, "final_decision_gt"] = "FLAG"
+                # For binary evaluation: FLAG counts as positive (FLAG → FAIL)
+                self._merged["final_decision_gt"] = self._merged["final_decision_gt"].map(
+                    lambda x: "FAIL" if x == "FLAG" else x
+                )
 
                 self._merged["final_decision_pred"] = self._normalize(
                     self._merged["final_decision"]
@@ -97,7 +107,8 @@ class ResultsEvaluator:
     @staticmethod
     def _normalize(series: pd.Series) -> pd.Series:
         s = series.fillna("").astype(str).str.strip().str.upper()
-        return s.replace("FLAG", "FAIL")
+        # Binary: PASS stays PASS, everything else (FLAG, FAIL, CLEAR, COMPLETE, etc.) → FAIL
+        return s.map(lambda x: x if x in ("PASS", "") else "FAIL")
 
     def _compute_column(self, col: str) -> ColumnMetrics:
         df = self._merged
