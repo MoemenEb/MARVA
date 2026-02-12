@@ -1,0 +1,81 @@
+id,requirement,atomicity,clarity,completion,Final decision
+Prj-1 - PR-026,Realtor shall either be able to generate a CMA report based on property criteria or provide an alternative method.,FAIL,FLAG,PASS,FAIL
+Prj-6 - PR-297,The system shall be intuitive to the Program Administrators/Nursing Staff Members. Input parameters not specified.',PASS,FLAG,FAIL,FLAG
+Prj-5 - PR-239,"For each shot, the product shall notify the players whether the shot was a hit or miss. and shall also provide backup functionality.",FAIL,PASS,FLAG,FAIL
+Prj-3 - PR-128,The audit report shall provide,PASS,FLAG,FAIL,FLAG
+Prj-3 - PR-096,"The Disputes System must provide Search functionality. The search method must include the ability to search by (1) the dispute case number, (2) the merchant account number, (3) the cardmember account number and (4) the issuer number. In addition to the above criteria, the search functionality must further allow the user to limit the results of the search by a date range, the type of dispute (ticket retrieval request or chargeback notification), the case status (open, closed or all) and the dispute reason code. Additionally, when error occurs, shall retry and notify administrator.",FAIL,PASS,PASS,FAIL
+Prj-7 - PR-353,All business rules specified in the Disputes System should ideally be in compliance to the guidelines of Regulation E and Regulation Z.',PASS,PASS,PASS,PASS
+Prj-7 - PR-364,The product shall be easy to use by Adjusters and Collision Estimators. 95\% of Adjusters and Collision Estimators shall find the product easy to use.',PASS,PASS,PASS,PASS
+Prj-15 - PR-619,"New branches/complexes/districts/regions and revenue/expense accounts added to the BDW must be reflected in the RFS system, etc. 100\% of the entities (mentioned above) available as of October month-end will be loaded into the RFS system prior to the budget start process, etc.'",FAIL,FAIL,PASS,FAIL
+Prj-5 - PR-215,The leads washing functionality will store any potential lead duplicates returned by the enterprise system.,PASS,PASS,PASS,PASS
+Prj-12 - PR-575,The product shall either operate with every platform.The product shall either accommodate any new technology without any change in its architecture.' or provide an alternative method.,FAIL,FLAG,PASS,FAIL
+Prj-4 - PR-176,PME Subsystem shall allow building product menus based on the list of products kept in the accounting system.,PASS,PASS,PASS,PASS
+Prj-5 - PR-221,The product shall allow a user to remove himself or herself from the list of players at any time. It should handle this appropriately when needed.,PASS,FAIL,PASS,FLAG
+Prj-1 - PR-007,The table side of the display shall be split into 2 regions: sequential and temporal. This must work as expected in normal conditions.,PASS,FAIL,PASS,FLAG
+Prj-6 - PR-282,The product shall either retain user preferences in the event of a failure.' or provide an alternative method.,FAIL,FLAG,PASS,FAIL
+Prj-2 - PR-031,The product shall allow the user to save the property search results. The system shall also log all transactions and send notifications.,FAIL,PASS,PASS,FAIL
+Prj-2 - PR-033,"Program Administrators and Nursing Staff Members shall be able to add a listing of students to a cohort. Additionally, when error occurs, shall retry and notify administrator.",FAIL,PASS,PASS,FAIL
+Prj-7 - PR-371,The recycled parts audit report shall be returned to the user within 10 seconds. No further details specified. The audit report shall contain ,PASS,PASS,FAIL,FLAG
+Prj-3 - PR-105,"The vehicle data shall either include vehicle year, make, and model.",PASS,PASS,PASS,PASS
+Prj-5 - PR-226,"Once a game is initiated, the product shall display a user friendly grid to each player.",PASS,FAIL,PASS,FLAG
+Prj-11 - PR-547,On a 56k connection the system response time for all operations must be no more than 6 seconds 90\% of the time.',PASS,PASS,PASS,PASS
+Prj-5 - PR-204,If a lead is scored to the high range the system will supply the lead data and score to the enterprise system. This must work as expected in normal conditions.,PASS,FAIL,PASS,FLAG
+Prj-8 - PR-374,The product shall achieve a 98\% uptime.,PASS,PASS,PASS,PASS
+Prj-6 - PR-285,The product shall be able support 1000 simultaneous users.' This must work as expected in normal conditions.,PASS,FAIL,PASS,FLAG
+Prj-8 - PR-380,The maintenance of the product will fall within the established corporate maintenance windows. The corporate maintance windows starts on (),PASS,PASS,FAIL,FLAG
+Prj-12 - PR-566,The system shall support Transparent Resource addition and Dynamic Change support to provide scalability and avoid service interruptions of more than 1 day.',PASS,PASS,FAIL,FLAG
+Prj-11 - PR-550,The system must be available fshall provide,PASS,FLAG,FAIL,FLAG
+Prj-5 - PR-274,The product shall generate a CMA report in an acceptable time.',PASS,FLAG,PASS,FLAG
+Prj-5 - PR-235,"The product shall maintain the status of each player for a turn, either offensive or defensive.",PASS,PASS,PASS,PASS
+Prj-8 - PR-460,The website should have an African feel but should not alienate non-Africans. The website should use animation on pages which are describing the services to grab the users attention and encourage them to sign up.',FAIL,FLAG,FLAG,FAIL
+Prj-2 - PR-045,"A clinical class shall specify the course name, lecture room requirements, clinical site needs, lecture instructor needs, and clinical lab instructor needs. ",PASS,PASS,PASS,PASS
+Prj-5 - PR-224,The product shall allow a player to initiate a game by selecting another available player from the list of players. and shall also provide backup functionality.,FAIL,PASS,PASS,FAIL
+Prj-5 - PR-234,"For each turn, the product shall identify one player as offensive status and one player as defensive status.",PASS,PASS,PASS,PASS
+Prj-4 - PR-197,Website must be able to supporshall provide,FAIL,FAIL,FAIL,FAIL
+Prj-5 - PR-275,The CMA report shall be returned no later 60 seconds after the user has entered the CMA report criteria.',PASS,PASS,PASS,PASS
+Prj-3 - PR-081,The Disputes System will facilitate direct data entry of a dispute case via a user interface that supports real time responses to the users. Input parameters not specified.,PASS,PASS,FAIL,FLAG
+Prj-8 - PR-430,"The product shall, where applicable, be able to be installed in any operating environment within 2 days, etc.'",PASS,FAIL,FLAG,FLAG
+Prj-6 - PR-277,The product shall synchronize with the office system every hour.',PASS,PASS,PASS,PASS
+Prj-3 - PR-100,"The Disputes System shall record the name of the user and the date for any activity that creates or modifies the disputes case in the system. A detailed history of the actions taken on the case, including the date and the user that performed the action must be maintained for auditing purposes. It should handle this appropriately when needed.",PASS,FAIL,PASS,FLAG
+Prj-8 - PR-465,An anonymous survey will show that 70\% of customers are comfortable purchasing streaming movies after 2 weeks using the website. Input parameters not specified.',PASS,PASS,FAIL,FLAG
+Prj-3 - PR-115,The estimator shall either search for available recycled parts using a list of preferred parts suppliers. or provide an alternative method.,FAIL,FLAG,PASS,FAIL
+Prj-7 - PR-368,The user should ideally easily locate instructions while using the product. User help can be found within 90\% of the system.',PASS,FAIL,PASS,FLAG
+Prj-10 - PR-518,IzognMovies shall meet the licensing requirements set forth by the appropriate organizations in order to stream African movies.',PASS,PASS,FLAG,FLAG
+Prj-4 - PR-168,The System shall allow on demand generation of all Inventory Quantity Adjustment documents since certain point of time.,PASS,FLAG,FLAG,FLAG
+Prj-4 - PR-160,The product should ideally record all the equipment that has been reserved.,PASS,FAIL,PASS,FLAG
+Prj-6 - PR-333,The Disputes application shall support 350 concurrent users without any degradation of performance in the application.',PASS,PASS,PASS,PASS
+Prj-15 - PR-624,The users should be able to easily use the system to successfully complete their budgets within the stipulated time for completion. With a week of training prior to product implementation 98\% of the users shall complete their budgets within the stipulated time.',FAIL,FLAG,PASS,FAIL
+Prj-14 - PR-604,Users shall be able to reach the 'add' 'drop' and 'trade player' pages with one click from the team owner's page.',PASS,PASS,PASS,PASS
+Prj-5 - PR-229,The product shall allow a player to position ships horizontally on their grid. ,PASS,PASS,PASS,PASS
+Prj-5 - PR-271,The product should ideally use symbols and words that are naturally understandable by the realtor community.',PASS,FAIL,PASS,FLAG
+Prj-6 - PR-324,The system shall be built such that it is as secure as possible from malicious interference.',PASS,FLAG,PASS,FLAG
+Prj-8 - PR-388,The product shall free of computer viruses.,PASS,FLAG,FAIL,FLAG
+Prj-2 - PR-058,The system shall allow a Program Administrator/Nursing Staff Member to move a student from one clinical lab section to another clinical lab section corresponding to the same clinical class.,PASS,PASS,PASS,PASS
+Prj-8 - PR-433,The product shall ensure that the database's data corresponds to the data entered by the user. Each conference room reservation in the system will contain the same information as was entered by the user.' and shall also provide backup functionality.,FAIL,PASS,PASS,FAIL
+Prj-8 - PR-411,The product shall create an exception log of problems encountered within the product for transmission to our company for analysis and resolution.',PASS,PASS,PASS,PASS
+Prj-14 - PR-605,Users shall either be able to view at least 25 NFL player statistics and points on each page.',PASS,FLAG,PASS,FLAG
+Prj-12 - PR-559,The product shall provide Monitoring Services.The product shall be easy for System Administrators and DBAs to use after two weeks of usage.' The system shall also log all transactions and send notifications.,FAIL,FLAG,PASS,FAIL
+Prj-3 - PR-104,"The system shall search for the preferred repair facility using vehicle, vehicle location, and radius in miles",PASS,PASS,FLAG,FLAG
+Prj-5 - PR-251,The product shall either allow a player to end a game at any time during the game.,PASS,FLAG,FLAG,FLAG
+Prj-13 - PR-592,The WCS shall be accessed by users through the Internet on an IBM computer running a Windows 2000 or above operating system.,PASS,PASS,PASS,PASS
+Prj-3 - PR-143,The product shall either assign the organizer's contact information to each meeting they create. or the user contact information,PASS,FAIL,PASS,FLAG
+Prj-8 - PR-389,The system shall prevent malicious attacks including denial of service.',PASS,PASS,FLAG,FLAG
+Prj-3 - PR-095,"The Disputes System must provide the ability to view existing dispute cases, etc.",PASS,PASS,PASS,PASS
+Prj-3 - PR-090,"The Disputes System must provide a confirmation to the user upon the creation of ticket retrieval request that contains the following information; the dispute case number, the type of retrieval requested (copy, original or portfolio), and the date that the merchant response is due. Additionally, when error occurs, shall retry and notify administrator.",FAIL,PASS,PASS,FAIL
+Prj-6 - PR-349,All updates to data files or database must be initiated from the Disputes System.' It should handle this appropriately when needed.,PASS,FAIL,PASS,FLAG
+Prj-6 - PR-301,The system shall be able to complete a set of tasks in a timely manner.',PASS,FLAG,FAIL,FLAG
+Prj-2 - PR-047,The system shall consist of a program name and listing of required classes (both clinical and non-clinical) that must be completed.,PASS,FLAG,PASS,FLAG
+Prj-3 - PR-082,The Disputes System must provide different levels of access with regard to disputes case initiation and follow-up actions.,PASS,PASS,FAIL,FLAG
+Prj-12 - PR-571,The product shall be platform independent.The product shall enable access to any type of development environment and platform.',PASS,PASS,PASS,PASS
+Prj-9 - PR-474,While streaming a movie buffering should only occur if there is latency in the user's connection.',PASS,PASS,PASS,PASS
+Prj-6 - PR-345,All additions of new users and modifications to user's access should ideally be recorded on the User Report.',PASS,FAIL,PASS,FLAG
+Prj-15 - PR-617,The RFS system should be able to easily interface with the BDW environment in order to load the data. 7 data files shall be received from the BDW and loaded into the RFS system within 3 hours one day prior to the start of budgeting process every year. The data will be as of October month-end. Test files (7) shall be loaded up to 5 times throughout the year from the BDW.' and shall also provide backup functionality.,FAIL,FLAG,PASS,FAIL
+Prj-8 - PR-390,The product must comply with Sarbanes-Oxley.' This must work as expected in normal conditions.,PASS,FAIL,PASS,FLAG
+Prj-1 - PR-028,The realtor shall be notified of new client appointments after automatic synchronization with office system The system shall also log all transactions and send notifications.,FAIL,PASS,PASS,FAIL
+Prj-4 - PR-167,The system shall allow generation of Inventory Quantity Adjustment documents on demand.,PASS,PASS,FAIL,FLAG
+Prj-3 - PR-072,The system shall perform operations.,PASS,FLAG,FAIL,FLAG
+Prj-3 - PR-074,"Program Administrators/Nursing Staff Members shall have the ability to modify information relating to cohorts, including cohort identifier, program of study, preferred sequence of classes and quarters that a cohort will be taking specific classes.",PASS,PASS,PASS,PASS
+Prj-2 - PR-068,The system will use the stored e-mail addresses as a primary means of communicating information to affected parties.,PASS,PASS,PASS,PASS
+Prj-9 - PR-471,The system shall have a maximum response time of 5 seconds unless noted by an exception below.',PASS,PASS,FAIL,FLAG
+Prj-5 - PR-225,"Once a game is initiated, the product shall display a defensive grid to each player",PASS,PASS,PASS,PASS
+Prj-4 - PR-164,The product should ideally have a customizable Look and Feel.,PASS,FAIL,PASS,FLAG
