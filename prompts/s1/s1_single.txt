@@ -13,7 +13,6 @@ Evaluate the input across the following dimensions:
 Atomicity
 Clarity
 Completion
-Consistency
 
 For each validation dimension, assess:
 Does the input appear to satisfy this dimension?
@@ -39,10 +38,9 @@ requirement/s:
 {{REQUIREMENT}}
 
 Step 1 : Internal use only
-> Requirmeent is atomic 
-> Requirmeent is Clear
-> Requirmeent is complete and no missing information
-> Requirmeent is consistent 
+> Requirement is atomic 
+> Requirement is Clear
+> Requirement is complete and no missing information
 
 Step 2: 
 Step 2 "Internal do not show": 
@@ -71,7 +69,7 @@ Output Schema (JSON Only)
   "status": "PASS | FLAG | FAIL",
   "agents": [
     {
-      "dimension": "atomicity | clarity | completion | consistency",
+      "dimension": "atomicity | clarity | completion",
       "status" : "PASS | FAIL | FLAG ",
       "issues" : "<one sentences explaination, empty if status pass>"
     }
