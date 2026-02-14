@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import argparse
+from pathlib import Path
 
 from evaluation.util.constants import DEFAULT_FIGURES_DIR
 from evaluation.util.io import make_fig_dir, parse_pairs
@@ -33,25 +36,25 @@ def main() -> None:
     if not args.metrics and not args.duration:
         parser.error("At least one of --metrics or --duration is required")
 
-    fig_dir = make_fig_dir(args.fig_dir)
+    fig_dir = Path(args.fig_dir) if args.fig_dir else make_fig_dir()
 
     if args.metrics:
         pairs = parse_pairs(args.metrics)
 
-        path = ScoresPlotter(pairs).plot(fig_dir, _resolved=True)
+        path = ScoresPlotter(pairs).plot(fig_dir)
         print(f"Saved: {path}")
 
-        path = ConfusionPlotter(pairs).plot(fig_dir, _resolved=True)
+        path = ConfusionPlotter(pairs).plot(fig_dir)
         print(f"Saved: {path}")
 
     if args.duration:
         pairs = parse_pairs(args.duration)
         analyzer = DurationAnalyzer(pairs)
 
-        path = DurationBoxPlotter().plot_from_analyzer(analyzer, fig_dir, _resolved=True)
+        path = DurationBoxPlotter().plot_from_analyzer(analyzer, fig_dir)
         print(f"Saved: {path}")
 
-        path = DurationSummaryPlotter().plot_from_analyzer(analyzer, fig_dir, _resolved=True)
+        path = DurationSummaryPlotter().plot_from_analyzer(analyzer, fig_dir)
         print(f"Saved: {path}")
 
 

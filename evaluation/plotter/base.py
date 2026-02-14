@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from evaluation.util.io import make_fig_dir
@@ -43,6 +44,24 @@ class BasePlotter:
     def run_names(self) -> list[str]:
         return list(self._runs.keys())
 
+    # ------------------------------------------------------------------
+    # Figure helpers
+    # ------------------------------------------------------------------
+
     @staticmethod
-    def _make_fig_dir(fig_dir: str | Path | None = None) -> Path:
+    def _resolve_fig_dir(fig_dir: str | Path | None = None) -> Path:
+        if isinstance(fig_dir, Path):
+            fig_dir.mkdir(parents=True, exist_ok=True)
+            return fig_dir
         return make_fig_dir(fig_dir)
+
+    @staticmethod
+    def _save_figure(fig: plt.Figure, fig_dir: Path, filename: str,
+                     title: str = "") -> Path:
+        if title:
+            fig.suptitle(title, fontweight="bold", fontsize=13)
+        fig.tight_layout()
+        path = fig_dir / filename
+        fig.savefig(path, dpi=150)
+        plt.close(fig)
+        return path

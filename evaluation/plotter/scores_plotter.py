@@ -12,8 +12,8 @@ from evaluation.util.constants import SCORE_METRICS
 class ScoresPlotter(BasePlotter):
     """Grouped bar chart: one subplot per metric, columns on x-axis, bars per run."""
 
-    def plot(self, fig_dir: str | Path | None = None, *, _resolved: bool = False) -> Path:
-        fig_dir = Path(fig_dir) if _resolved and fig_dir else self._make_fig_dir(fig_dir)
+    def plot(self, fig_dir: str | Path | None = None) -> Path:
+        fig_dir = self._resolve_fig_dir(fig_dir)
 
         runs = self._runs
         run_names = self.run_names
@@ -47,9 +47,5 @@ class ScoresPlotter(BasePlotter):
             ax.set_ylim(0, 1.15)
             ax.legend(fontsize=8)
 
-        fig.suptitle("Classification Metrics by Run", fontweight="bold", fontsize=13)
-        fig.tight_layout()
-        path = fig_dir / "scores_comparison.png"
-        fig.savefig(path, dpi=150)
-        plt.close(fig)
-        return path
+        return self._save_figure(fig, fig_dir, "scores_comparison.png",
+                                 title="Classification Metrics by Run")

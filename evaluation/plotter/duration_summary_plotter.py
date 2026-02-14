@@ -13,8 +13,8 @@ class DurationSummaryPlotter(BasePlotter):
     """Grouped bar chart of mean, median, and total duration per run."""
 
     def plot_from_analyzer(self, analyzer: DurationAnalyzer,
-                           fig_dir: str | Path | None = None, *, _resolved: bool = False) -> Path:
-        fig_dir = Path(fig_dir) if _resolved and fig_dir else self._make_fig_dir(fig_dir)
+                           fig_dir: str | Path | None = None) -> Path:
+        fig_dir = self._resolve_fig_dir(fig_dir)
 
         stats = analyzer.summary()
         run_names = stats["run"].tolist()
@@ -57,9 +57,5 @@ class DurationSummaryPlotter(BasePlotter):
         ax.set_ylabel("Minutes")
         ax.set_title("Total Run Duration", fontweight="bold")
 
-        fig.suptitle("Duration Comparison", fontweight="bold", fontsize=13)
-        fig.tight_layout()
-        path = fig_dir / "duration_summary.png"
-        fig.savefig(path, dpi=150)
-        plt.close(fig)
-        return path
+        return self._save_figure(fig, fig_dir, "duration_summary.png",
+                                 title="Duration Comparison")

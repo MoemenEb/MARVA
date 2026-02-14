@@ -1,16 +1,23 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from pathlib import Path
 
 import pandas as pd
 
-from evaluation.util.constants import EXCLUDE_COLUMNS
+from evaluation.util.constants import (
+    EXCLUDE_COLUMNS,
+    FLAG_LABEL,
+    ATOMICITY_COL,
+)
 
 
 class BaseEvaluator:
     """Load and merge a results CSV against a ground-truth CSV.
 
     FLAG labels in the results are mapped to FAIL before comparison.
+    Subclasses must implement ``_compute_column(col)`` to return a
+    dataclass instance with the per-column metrics.
     """
 
     def __init__(
@@ -28,6 +35,11 @@ class BaseEvaluator:
 
         self._merged: pd.DataFrame | None = None
         self._columns: list[str] = []
+        self._metrics: list | None = None
+
+    # ------------------------------------------------------------------
+    # Data loading
+    # ------------------------------------------------------------------
 
     def _load(self) -> None:
         gt = pd.read_csv(self._gt_path, dtype=str)
@@ -53,27 +65,39 @@ class BaseEvaluator:
         ]
 
         if self._derive_final and "final_decision" in pred.columns:
-            eval_gt_cols = [c for c in self._columns if c != "final_decision"]
-            if eval_gt_cols:
-                self._merged["final_decision_gt"] = "PASS"
-                for col in eval_gt_cols:
-                    gt_vals = self._normalize(self._merged[f"{col}_gt"])
-                    if col == "atomicity":
-                        self._merged.loc[gt_vals == "FAIL", "final_decision_gt"] = "FAIL"
-                    else:
-                        mask = (gt_vals == "FAIL") & (self._merged["final_decision_gt"] != "FAIL")
-                        self._merged.loc[mask, "final_decision_gt"] = "FLAG"
-                self._merged["final_decision_gt"] = self._merged["final_decision_gt"].map(
-                    lambda x: "FAIL" if x == "FLAG" else x
-                )
+            self._derive_final_decision()
 
-                self._merged["final_decision_pred"] = self._normalize(
-                    self._merged["final_decision"]
-                    if "final_decision" in self._merged.columns
-                    else self._merged["final_decision_pred"]
+    def _derive_final_decision(self) -> None:
+        eval_gt_cols = [c for c in self._columns if c != "final_decision"]
+        if not eval_gt_cols:
+            return
+
+        self._merged["final_decision_gt"] = "PASS"
+        for col in eval_gt_cols:
+            gt_vals = self._normalize(self._merged[f"{col}_gt"])
+            if col == ATOMICITY_COL:
+                self._merged.loc[gt_vals == "FAIL", "final_decision_gt"] = "FAIL"
+            else:
+                mask = (gt_vals == "FAIL") & (
+                    self._merged["final_decision_gt"] != "FAIL"
                 )
-                if "final_decision" not in self._columns:
-                    self._columns.append("final_decision")
+                self._merged.loc[mask, "final_decision_gt"] = FLAG_LABEL
+
+        self._merged["final_decision_gt"] = self._merged[
+            "final_decision_gt"
+        ].map(lambda x: "FAIL" if x == FLAG_LABEL else x)
+
+        self._merged["final_decision_pred"] = self._normalize(
+            self._merged["final_decision"]
+            if "final_decision" in self._merged.columns
+            else self._merged["final_decision_pred"]
+        )
+        if "final_decision" not in self._columns:
+            self._columns.append("final_decision")
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
 
     @staticmethod
     def _normalize(series: pd.Series) -> pd.Series:
@@ -97,3 +121,21 @@ class BaseEvaluator:
         if self._merged is None:
             self._load()
         return list(self._columns)
+
+    # ------------------------------------------------------------------
+    # Template methods — subclasses implement _compute_column()
+    # ------------------------------------------------------------------
+
+    def _compute_column(self, col: str):
+        raise NotImplementedError
+
+    def evaluate(self) -> list:
+        if self._metrics is not None:
+            return self._metrics
+        if self._merged is None:
+            self._load()
+        self._metrics = [self._compute_column(col) for col in self._columns]
+        return self._metrics
+
+    def summary(self) -> pd.DataFrame:
+        return pd.DataFrame([asdict(m) for m in self.evaluate()])

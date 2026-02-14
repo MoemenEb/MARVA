@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
-import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -27,10 +26,6 @@ class ScoreMetrics:
 class ScoreEvaluator(BaseEvaluator):
     """Compute accuracy, precision, recall, and F1 per evaluation column."""
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._metrics: list[ScoreMetrics] | None = None
-
     def _compute_column(self, col: str) -> ScoreMetrics:
         y_true, y_pred, support = self._prepare_column(col)
         if support == 0:
@@ -46,14 +41,3 @@ class ScoreEvaluator(BaseEvaluator):
             recall=recall_score(y_true, y_pred, pos_label=POS_LABEL, zero_division=0),
             f1=f1_score(y_true, y_pred, pos_label=POS_LABEL, zero_division=0),
         )
-
-    def evaluate(self) -> list[ScoreMetrics]:
-        if self._metrics is not None:
-            return self._metrics
-        if self._merged is None:
-            self._load()
-        self._metrics = [self._compute_column(col) for col in self._columns]
-        return self._metrics
-
-    def summary(self) -> pd.DataFrame:
-        return pd.DataFrame([asdict(m) for m in self.evaluate()])

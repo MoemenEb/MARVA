@@ -11,8 +11,8 @@ from evaluation.plotter.base import BasePlotter
 class ConfusionPlotter(BasePlotter):
     """Grid of 2x2 confusion-matrix heatmaps: rows = columns, cols = runs."""
 
-    def plot(self, fig_dir: str | Path | None = None, *, _resolved: bool = False) -> Path:
-        fig_dir = Path(fig_dir) if _resolved and fig_dir else self._make_fig_dir(fig_dir)
+    def plot(self, fig_dir: str | Path | None = None) -> Path:
+        fig_dir = self._resolve_fig_dir(fig_dir)
 
         runs = self._runs
         run_names = self.run_names
@@ -54,9 +54,5 @@ class ConfusionPlotter(BasePlotter):
                         fontsize=11, fontweight="bold", ha="right", va="center", rotation=90,
                     )
 
-        fig.suptitle("Confusion Matrices", fontweight="bold", fontsize=13)
-        fig.tight_layout()
-        path = fig_dir / "confusion_matrices.png"
-        fig.savefig(path, dpi=150)
-        plt.close(fig)
-        return path
+        return self._save_figure(fig, fig_dir, "confusion_matrices.png",
+                                 title="Confusion Matrices")

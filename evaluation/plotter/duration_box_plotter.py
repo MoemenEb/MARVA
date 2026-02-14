@@ -12,8 +12,8 @@ class DurationBoxPlotter(BasePlotter):
     """Box plot of per-requirement durations (after outlier removal)."""
 
     def plot_from_analyzer(self, analyzer: DurationAnalyzer,
-                           fig_dir: str | Path | None = None, *, _resolved: bool = False) -> Path:
-        fig_dir = Path(fig_dir) if _resolved and fig_dir else self._make_fig_dir(fig_dir)
+                           fig_dir: str | Path | None = None) -> Path:
+        fig_dir = self._resolve_fig_dir(fig_dir)
 
         run_names = analyzer.run_names
         clean = analyzer.clean
@@ -27,8 +27,5 @@ class DurationBoxPlotter(BasePlotter):
 
         ax.set_ylabel("Duration (s)")
         ax.set_title("Per-Requirement Duration (outliers removed)", fontweight="bold")
-        fig.tight_layout()
-        path = fig_dir / "duration_boxplot.png"
-        fig.savefig(path, dpi=150)
-        plt.close(fig)
-        return path
+
+        return self._save_figure(fig, fig_dir, "duration_boxplot.png")

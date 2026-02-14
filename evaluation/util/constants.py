@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 # --- Evaluator constants ---
 EXCLUDE_COLUMNS = {"id", "requirement", "recommendations", "duration", "notes", "NOTES"}
 POS_LABEL = "FAIL"
 LABELS = ["PASS", "FAIL"]
+FLAG_LABEL = "FLAG"
+ATOMICITY_COL = "atomicity"
 
 # --- Score metrics tracked ---
 SCORE_METRICS = ["accuracy", "precision", "recall", "f1"]

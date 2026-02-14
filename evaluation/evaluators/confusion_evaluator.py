@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
-import pandas as pd
 from sklearn.metrics import confusion_matrix
 
 from evaluation.evaluators.base import BaseEvaluator
@@ -22,10 +21,6 @@ class ConfusionMetrics:
 class ConfusionEvaluator(BaseEvaluator):
     """Compute TP, TN, FP, FN per evaluation column."""
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._metrics: list[ConfusionMetrics] | None = None
-
     def _compute_column(self, col: str) -> ConfusionMetrics:
         y_true, y_pred, support = self._prepare_column(col)
         if support == 0:
@@ -43,14 +38,3 @@ class ConfusionEvaluator(BaseEvaluator):
             tn=int(tn),
             fn=int(fn),
         )
-
-    def evaluate(self) -> list[ConfusionMetrics]:
-        if self._metrics is not None:
-            return self._metrics
-        if self._merged is None:
-            self._load()
-        self._metrics = [self._compute_column(col) for col in self._columns]
-        return self._metrics
-
-    def summary(self) -> pd.DataFrame:
-        return pd.DataFrame([asdict(m) for m in self.evaluate()])
