@@ -183,7 +183,8 @@ def build_marva_s3_graph(agents: dict):
         status = state["atomicity"].status.upper()
         if status == "FAIL":
             logger.warning("Atomicity FAILED — skipping to decision (hard gate)")
-            return "decision"
+            # return "decision"
+            return "single_parallel"  # For now, we still run the parallel agents to gather more info for decision
         logger.debug("Atomicity passed (%s) — continuing to parallel agents", status)
         return "single_parallel"
 
