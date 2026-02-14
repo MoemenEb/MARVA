@@ -1,39 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
 from pathlib import Path
 
 import pandas as pd
-from sklearn.metrics import (
-    accuracy_score,
-    confusion_matrix,
-    f1_score,
-    precision_score,
-    recall_score,
-)
 
-EXCLUDE_COLUMNS = {"id", "requirement", "recommendations", "duration", "notes", "NOTES"}
-POS_LABEL = "FAIL"
-LABELS = ["PASS", "FAIL"]
+from evaluation.util.constants import EXCLUDE_COLUMNS
 
 
-@dataclass
-class ColumnMetrics:
-    column: str
-    support: int
-    accuracy: float
-    precision: float
-    recall: float
-    f1: float
-    tp: int
-    fp: int
-    tn: int
-    fn: int
-
-
-class ResultsEvaluator:
-    """Compare a results CSV against a ground-truth CSV and compute binary
-    classification metrics per evaluation column.
+class BaseEvaluator:
+    """Load and merge a results CSV against a ground-truth CSV.
 
     FLAG labels in the results are mapped to FAIL before comparison.
     """
@@ -53,7 +28,6 @@ class ResultsEvaluator:
 
         self._merged: pd.DataFrame | None = None
         self._columns: list[str] = []
-        self._metrics: list[ColumnMetrics] | None = None
 
     def _load(self) -> None:
         gt = pd.read_csv(self._gt_path, dtype=str)
@@ -85,13 +59,10 @@ class ResultsEvaluator:
                 for col in eval_gt_cols:
                     gt_vals = self._normalize(self._merged[f"{col}_gt"])
                     if col == "atomicity":
-                        # atomicity failure → definite FAIL
                         self._merged.loc[gt_vals == "FAIL", "final_decision_gt"] = "FAIL"
                     else:
-                        # clarity/completion failures → FLAG (needs revision)
                         mask = (gt_vals == "FAIL") & (self._merged["final_decision_gt"] != "FAIL")
                         self._merged.loc[mask, "final_decision_gt"] = "FLAG"
-                # For binary evaluation: FLAG counts as positive (FLAG → FAIL)
                 self._merged["final_decision_gt"] = self._merged["final_decision_gt"].map(
                     lambda x: "FAIL" if x == "FLAG" else x
                 )
@@ -107,59 +78,22 @@ class ResultsEvaluator:
     @staticmethod
     def _normalize(series: pd.Series) -> pd.Series:
         s = series.fillna("").astype(str).str.strip().str.upper()
-        # Binary: PASS stays PASS, everything else (FLAG, FAIL, CLEAR, COMPLETE, etc.) → FAIL
         return s.map(lambda x: x if x in ("PASS", "") else "FAIL")
 
-    def _compute_column(self, col: str) -> ColumnMetrics:
+    def _prepare_column(self, col: str) -> tuple[pd.Series, pd.Series, int]:
+        """Return (y_true, y_pred, support) for a column, loading data if needed."""
+        if self._merged is None:
+            self._load()
         df = self._merged
-        gt_col = f"{col}_gt"
-        pred_col = f"{col}_pred"
-
-        y_true = self._normalize(df[gt_col])
-        y_pred = self._normalize(df[pred_col])
-
+        y_true = self._normalize(df[f"{col}_gt"])
+        y_pred = self._normalize(df[f"{col}_pred"])
         mask = (y_true != "") & (y_pred != "")
         y_true = y_true[mask]
         y_pred = y_pred[mask]
+        return y_true, y_pred, len(y_true)
 
-        support = len(y_true)
-        if support == 0:
-            return ColumnMetrics(
-                column=col, support=0,
-                accuracy=0.0, precision=0.0, recall=0.0, f1=0.0,
-                tp=0, fp=0, tn=0, fn=0,
-            )
-
-        cm = confusion_matrix(y_true, y_pred, labels=LABELS)
-        tn, fp, fn, tp = cm[0, 0], cm[0, 1], cm[1, 0], cm[1, 1]
-
-        return ColumnMetrics(
-            column=col,
-            support=support,
-            accuracy=accuracy_score(y_true, y_pred),
-            precision=precision_score(y_true, y_pred, pos_label=POS_LABEL, zero_division=0),
-            recall=recall_score(y_true, y_pred, pos_label=POS_LABEL, zero_division=0),
-            f1=f1_score(y_true, y_pred, pos_label=POS_LABEL, zero_division=0),
-            tp=int(tp),
-            fp=int(fp),
-            tn=int(tn),
-            fn=int(fn),
-        )
-
-    def evaluate(self) -> list[ColumnMetrics]:
-        if self._metrics is not None:
-            return self._metrics
+    @property
+    def columns(self) -> list[str]:
         if self._merged is None:
             self._load()
-        self._metrics = [self._compute_column(col) for col in self._columns]
-        return self._metrics
-
-    def summary(self) -> pd.DataFrame:
-        return pd.DataFrame([asdict(m) for m in self.evaluate()])
-
-    def save(self, out_dir: str | Path) -> Path:
-        out_dir = Path(out_dir)
-        out_dir.mkdir(parents=True, exist_ok=True)
-        out_file = out_dir / f"{self._res_path.stem}_metrics.csv"
-        self.summary().to_csv(out_file, index=False)
-        return out_file
+        return list(self._columns)
