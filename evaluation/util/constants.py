@@ -11,6 +11,7 @@ ATOMICITY_COL = "atomicity"
 
 # --- Score metrics tracked ---
 SCORE_METRICS = ["accuracy", "precision", "recall", "f1"]
+STAT_METRICS = ["precision", "recall", "f1"]
 
 # --- Default directories ---
 DEFAULT_FIGURES_DIR = Path("figures")
