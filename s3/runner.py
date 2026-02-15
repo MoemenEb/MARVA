@@ -37,12 +37,12 @@ def main(mode: str, scope: str, limit: int | None):
     # Init agents + graph
     # -----------------------------
     t0 = time.perf_counter()
-    agents = build_agents(mode)
+    agents, agents_config = build_agents(mode)
     agents_elapsed = time.perf_counter() - t0
     logger.info("Agents for mode='%s' built in %.2fs (%d agents)", mode, agents_elapsed, len(agents))
 
     t0 = time.perf_counter()
-    graph = build_marva_s3_graph(agents)
+    graph = build_marva_s3_graph(agents, agents_config)
     app = graph.compile()
     logger.debug("Graph compiled in %.2fs", time.perf_counter() - t0)
 
