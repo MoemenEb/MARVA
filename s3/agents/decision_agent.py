@@ -18,16 +18,18 @@ class DecisionAgent(BaseValidationAgent):
     - True caching: ~97% reduction in prompt tokens after first call
     """
 
-    def __init__(self, llm, prompts: dict[str, str]):
+    def __init__(self, llm, prompts: dict[str, str], active_validators: list[str] = None):
         """
         Initialize the decision agent.
 
         Args:
             llm: CachedOllamaClient instance (already initialized with system prompt)
             prompts: Dict with 'task' prompt template (system prompt is in llm)
+            active_validators: List of enabled validation agent keys (e.g. ["atomicity", "clarity"])
         """
         super().__init__(llm)
         self.prompts = prompts
+        self.active_validators = active_validators
 
     # -------------------------------------------------
     # Entry point
@@ -80,7 +82,9 @@ class DecisionAgent(BaseValidationAgent):
     def _collect_validations(self, state: dict, mode: str) -> list[dict]:
         validations = []
 
-        if mode == "single":
+        if self.active_validators is not None:
+            keys = self.active_validators
+        elif mode == "single":
             keys = ["atomicity", "clarity", "completion_single"]
         elif mode == "group":
             keys = ["redundancy", "completion_group", "consistency_group"]

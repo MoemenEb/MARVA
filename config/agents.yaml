@@ -1,0 +1,28 @@
+# Per-agent configuration for S3 pipeline
+# decision agent is always enabled and cannot be configured here
+
+# --- Single mode agents ---
+atomicity:
+  enabled: true
+  hard_gate: true       # If FAIL, skip remaining agents → go directly to decision (VDA)
+
+clarity:
+  enabled: true
+  hard_gate: false
+
+completion_single:
+  enabled: true
+  hard_gate: false
+
+# --- Group mode agents ---
+redundancy:
+  enabled: true
+  hard_gate: false
+
+completion_group:
+  enabled: true
+  hard_gate: false
+
+consistency_group:
+  enabled: true
+  hard_gate: false

@@ -105,8 +105,19 @@ def execute_parallel_agents(state: MARVAState, agent_list: list, max_workers: in
 # Graph builder
 # ------------------------------------------------------------------
 
-def build_marva_s3_graph(agents: dict):
+def build_marva_s3_graph(agents: dict, agents_config: dict = None):
     logger.debug("Building S3 state graph")
+
+    if agents_config is None:
+        agents_config = {}
+
+    def is_enabled(name: str) -> bool:
+        """Check if an agent is enabled (defaults to True if not in config)."""
+        return agents_config.get(name, {}).get("enabled", True)
+
+    def has_hard_gate(name: str) -> bool:
+        """Check if an agent has hard_gate enabled."""
+        return agents_config.get(name, {}).get("hard_gate", False)
 
     graph = StateGraph(MARVAState)
 
@@ -117,28 +128,41 @@ def build_marva_s3_graph(agents: dict):
     # Master orchestrator
     graph.add_node("orchestrator", orchestrator_agent)
 
-    # Single-scope validation agents
-    graph.add_node("atomicity", lambda s: _get_agent(agents, "atomicity").run(s))
+    # Single-scope validation agents (conditional on config)
+    atomicity_enabled = is_enabled("atomicity")
+    if atomicity_enabled:
+        graph.add_node("atomicity", lambda s: _get_agent(agents, "atomicity").run(s))
 
     # Control / synchronization nodes
     graph.add_node("single_parallel", single_parallel_node)
     graph.add_node("group_parallel", group_parallel_node)
 
-    # Parallel execution nodes
+    # Parallel execution nodes (dynamically filtered by config)
     def single_parallel_execution(state: MARVAState):
-        agent_list = [
-            (_get_agent(agents, "clarity"), "clarity"),
-            (_get_agent(agents, "completion_single"), "completion_single")
-        ]
-        return execute_parallel_agents(state, agent_list, max_workers=2)
+        agent_list = []
+        if is_enabled("clarity") and "clarity" in agents:
+            agent_list.append((_get_agent(agents, "clarity"), "clarity"))
+        if is_enabled("completion_single") and "completion_single" in agents:
+            agent_list.append((_get_agent(agents, "completion_single"), "completion_single"))
+
+        if not agent_list:
+            logger.info("No single parallel agents enabled, skipping")
+            return {}
+        return execute_parallel_agents(state, agent_list, max_workers=len(agent_list))
 
     def group_parallel_execution(state: MARVAState):
-        agent_list = [
-            (_get_agent(agents, "redundancy"), "redundancy"),
-            (_get_agent(agents, "completion_group"), "completion_group"),
-            (_get_agent(agents, "consistency_group"), "consistency_group")
-        ]
-        return execute_parallel_agents(state, agent_list, max_workers=3)
+        agent_list = []
+        if is_enabled("redundancy") and "redundancy" in agents:
+            agent_list.append((_get_agent(agents, "redundancy"), "redundancy"))
+        if is_enabled("completion_group") and "completion_group" in agents:
+            agent_list.append((_get_agent(agents, "completion_group"), "completion_group"))
+        if is_enabled("consistency_group") and "consistency_group" in agents:
+            agent_list.append((_get_agent(agents, "consistency_group"), "consistency_group"))
+
+        if not agent_list:
+            logger.info("No group parallel agents enabled, skipping")
+            return {}
+        return execute_parallel_agents(state, agent_list, max_workers=len(agent_list))
 
     graph.add_node("single_parallel_exec", single_parallel_execution)
     graph.add_node("group_parallel_exec", group_parallel_execution)
@@ -159,43 +183,51 @@ def build_marva_s3_graph(agents: dict):
     def orchestrator_router(state: MARVAState):
         mode = state["mode"]
         if mode == "single":
-            logger.debug("Orchestrator routing to 'atomicity' (mode=single)")
-            return "atomicity"
+            if atomicity_enabled:
+                logger.debug("Orchestrator routing to 'atomicity' (mode=single)")
+                return "atomicity"
+            else:
+                logger.debug("Orchestrator routing to 'single_parallel' (atomicity disabled)")
+                return "single_parallel"
         if mode == "group":
             logger.debug("Orchestrator routing to 'group_parallel' (mode=group)")
             return "group_parallel"
         raise ValueError(f"Unknown mode: {mode}")
 
+    orchestrator_targets = {
+        "single_parallel": "single_parallel",
+        "group_parallel": "group_parallel",
+    }
+    if atomicity_enabled:
+        orchestrator_targets["atomicity"] = "atomicity"
+
     graph.add_conditional_edges(
         "orchestrator",
         orchestrator_router,
-        {
-            "atomicity": "atomicity",
-            "group_parallel": "group_parallel",
-        },
+        orchestrator_targets,
     )
 
     # -------------------------------------------------
-    # Atomicity hard gate (single mode only)
+    # Atomicity hard gate (single mode only, config-driven)
     # -------------------------------------------------
 
-    def atomicity_router(state: MARVAState):
-        status = state["atomicity"].status.upper()
-        if status == "FAIL":
-            logger.warning("Atomicity FAILED — skipping to decision (hard gate)")
-            # return "decision"
-            return "single_parallel"  # For now, we still run the parallel agents to gather more info for decision
-        logger.debug("Atomicity passed (%s) — continuing to parallel agents", status)
-        return "single_parallel"
+    if atomicity_enabled:
+        def atomicity_router(state: MARVAState):
+            status = state["atomicity"].status.upper()
+            if status == "FAIL" and has_hard_gate("atomicity"):
+                logger.warning("Atomicity FAILED — hard gate active, skipping to decision (VDA)")
+                return "decision"
+            logger.debug("Atomicity %s — continuing to parallel agents", status)
+            return "single_parallel"
 
-    graph.add_conditional_edges(
-        "atomicity",
-        atomicity_router,
-        {
-            "decision": "decision",
-            "single_parallel": "single_parallel",
-        },
-    )
+        graph.add_conditional_edges(
+            "atomicity",
+            atomicity_router,
+            {
+                "decision": "decision",
+                "single_parallel": "single_parallel",
+            },
+        )
 
     # -------------------------------------------------
     # Single-scope parallel validation
