@@ -5,6 +5,7 @@ from evaluation.evaluators import (
     ConfusionEvaluator,
     ConfusionMetrics,
     DurationAnalyzer,
+    CrossRunAnalyzer,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "ConfusionEvaluator",
     "ConfusionMetrics",
     "DurationAnalyzer",
+    "CrossRunAnalyzer",
 ]
