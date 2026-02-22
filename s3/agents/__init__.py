@@ -91,6 +91,7 @@ def build_agents(mode: str):
             num_predict=cfg["model"].get("max_tokens", 1024),
             timeout=cfg["global"]["timeout_seconds"],
             max_retries=cfg["global"]["max_retries"],
+            disable_think=cfg["model"].get("disable_think", True),
         )
         logger.info("Cached LLM client '%s' ready in %.2fs", name, time.perf_counter() - t0)
 

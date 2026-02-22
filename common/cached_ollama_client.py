@@ -50,7 +50,8 @@ class CachedOllamaClient:
         temperature: float = 0.0,
         num_predict: int = 1024,
         timeout: int = 60,
-        max_retries: int = 3
+        max_retries: int = 3,
+        disable_think: bool = True,
     ):
         """
         Initialize client and cache system prompt context.
@@ -63,6 +64,10 @@ class CachedOllamaClient:
             num_predict: Maximum tokens to generate per call
             timeout: Request timeout in seconds
             max_retries: Maximum retry attempts on failure
+            disable_think: If True, passes think=False to Ollama (suppresses qwen3
+                           chain-of-thought blocks that would otherwise consume the
+                           token budget and truncate the JSON response). Safe to set
+                           on models that don't support this option — Ollama ignores it.
         """
         self.model = model
         self.base_url = base_url
@@ -71,6 +76,7 @@ class CachedOllamaClient:
         self.timeout = timeout
         self.max_retries = max_retries
         self.system_prompt = system_prompt
+        self.disable_think = disable_think
 
         # Initialize system context (send system prompt once)
         self.system_context = self._initialize_system_context()
@@ -94,6 +100,7 @@ class CachedOllamaClient:
             "options": {
                 "temperature": self.temperature,
                 "num_predict": 1,  # minimize wasted generation, we only need the context
+                **({"think": False} if self.disable_think else {}),
             }
         }
 
@@ -144,6 +151,7 @@ class CachedOllamaClient:
             "options": {
                 "temperature": self.temperature,
                 "num_predict": self.num_predict,
+                **({"think": False} if self.disable_think else {}),
             }
         }
 
@@ -159,6 +167,7 @@ class CachedOllamaClient:
 
                 latency_ms = int((time.time() - start_time) * 1000)
                 text = result.get("response", "")
+                logger.debug("Raw Ollama response (len=%d): %r", len(text), text[:300])
                 # Strip thinking blocks (e.g. qwen3 <think>...</think>)
                 text = self._THINK_RE.sub("", text).strip()
                 logger.debug("Cached generate response (latency=%dms, response_len=%d, attempt=%d)", latency_ms, len(text), attempt)
